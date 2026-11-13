@@ -43,6 +43,12 @@ STREAK_BONUS = 5      # extra XP per answer once a streak reaches 3
 MONSTER_BONUS = 20
 BOSS_BONUS = 50
 
+# --- Speed trials (the quick way to win or polish a gem) --------------------
+TRIAL_QUESTIONS = 5   # riddles in a speed trial
+TRIAL_PASS = 4        # right answers needed to pass
+TRIAL_MIN_TIER = 3    # lowest riddle level when a trial is used to SKIP a quest
+TASK_XP_FACTOR = 2    # hands-on tasks pay this many times a riddle's XP
+
 # --- Fight length (right answers needed to win) -----------------------------
 MONSTER_HITS = 2
 BOSS_HITS = 3

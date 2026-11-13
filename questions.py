@@ -60,6 +60,7 @@ class Question:
     explanation: str
     kind: str = "number"      # "number" | "fraction" | "choice"
     choices: list = field(default_factory=list)
+    picture: tuple | None = None   # drawn by pictures.for_question
 
 
 # --------------------------------------------------------------------------
@@ -129,9 +130,9 @@ def fmt(value) -> str:
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
-def _p(text, answer, hint, expl, kind="number", choices=None):
+def _p(text, answer, hint, expl, kind="number", choices=None, picture=None):
     return dict(text=text, answer=answer, hint=hint, explanation=expl,
-                kind=kind, choices=list(choices or []))
+                kind=kind, choices=list(choices or []), picture=picture)
 
 
 def _place_parts(n):
@@ -277,7 +278,8 @@ def _multiplication(t, rng):
         ])
         return _p(text, a * b,
                   f"Count by {max(a, b)}s, {min(a, b)} times.",
-                  f"{a} × {b} = {a * b}.")
+                  f"{a} × {b} = {a * b}.",
+                  picture=("array", a, b) if t <= 2 else None)
     return _p(f"What is {a} × {b}?", a * b,
               f"Split {a} into tens and ones, multiply each part by {b}, then add.",
               _mul_steps(a, b) + ".")
@@ -357,7 +359,7 @@ def _fractions(t, rng):
                       f"{k} out of {n} slices: the fraction is {k}/{n}"
                       + (f" (which is the same as {fmt(Fraction(k, n))})."
                          if fmt(Fraction(k, n)) != f"{k}/{n}" else "."),
-                      kind="fraction")
+                      kind="fraction", picture=("pie", k, n))
         d = rng.choice([4, 5, 6, 8, 10])
         a, b = rng.sample(range(1, d), 2)
         big = max(a, b)
@@ -365,7 +367,8 @@ def _fractions(t, rng):
                   "The pieces are the same size. Which one has more pieces?",
                   f"Both are cut into {d} pieces, and {big} pieces is more than "
                   f"{min(a, b)} pieces. So {big}/{d} is bigger.",
-                  kind="choice", choices=[f"{a}/{d}", f"{b}/{d}"])
+                  kind="choice", choices=[f"{a}/{d}", f"{b}/{d}"],
+                  picture=("bars", [(a, d), (b, d)]))
     if t == 2:
         if rng.random() < 0.5:
             n, d = rng.choice([(1, 2), (1, 3), (2, 3), (1, 4), (3, 4), (1, 5), (2, 5)])
@@ -373,7 +376,8 @@ def _fractions(t, rng):
             return _p(f"Fill in the missing number:   {n}/{d} = ?/{d * m}", n * m,
                       f"The bottom was multiplied by {m}. Do the same to the top.",
                       f"{d} × {m} = {d * m}, so multiply the top by {m} too: "
-                      f"{n} × {m} = {n * m}. So {n}/{d} = {n * m}/{d * m}.")
+                      f"{n} × {m} = {n * m}. So {n}/{d} = {n * m}/{d * m}.",
+                      picture=("bars", [(n, d)], d * m))
         n = rng.choice([1, 1, 2, 3])
         d1, d2 = rng.sample([d for d in (3, 4, 5, 6, 8, 10) if d > n], 2)
         small_d = min(d1, d2)
@@ -381,7 +385,8 @@ def _fractions(t, rng):
                   "Cutting a pie into MORE pieces makes each piece smaller.",
                   f"Pieces of size 1/{small_d} are bigger than pieces of size "
                   f"1/{max(d1, d2)}, so {n}/{small_d} is bigger.",
-                  kind="choice", choices=[f"{n}/{d1}", f"{n}/{d2}"])
+                  kind="choice", choices=[f"{n}/{d1}", f"{n}/{d2}"],
+                  picture=("bars", [(n, d1), (n, d2)]))
     if t == 3:
         d = rng.choice([5, 6, 8, 10, 12])
         if rng.random() < 0.5:
@@ -477,11 +482,13 @@ def _area_perimeter(t, rng):
                       f"What is its PERIMETER (the distance all the way around), in {u}?",
                       2 * (l + w),
                       "Add all four sides: two long sides and two short sides.",
-                      f"{l} + {w} + {l} + {w} = {2 * (l + w)} {u}.")
+                      f"{l} + {w} + {l} + {w} = {2 * (l + w)} {u}.",
+                      picture=("rect", l, w, f"{l} {u}", f"{w} {u}"))
         return _p(f"A rectangular {place} is {l} {u} long and {w} {u} wide. "
                   f"What is its AREA (the space inside), in square {u}?", l * w,
                   "Area of a rectangle = length × width.",
-                  f"{l} × {w} = {l * w} square {u}.")
+                  f"{l} × {w} = {l * w} square {u}.",
+                  picture=("rect", l, w, f"{l} {u}", f"{w} {u}", True))
     if t == 3:
         if rng.random() < 0.5:
             s = rng.randint(3, 12)
@@ -494,7 +501,8 @@ def _area_perimeter(t, rng):
         return _p(f"A rectangular {place} has an area of {l * w} square {u}. "
                   f"It is {w} {u} wide. How long is it?", l,
                   f"Area = length × width. What times {w} makes {l * w}?",
-                  f"{l * w} ÷ {w} = {l} {u}.")
+                  f"{l * w} ÷ {w} = {l} {u}.",
+                  picture=("rect", l, w, "?", f"{w} {u}"))
     if t == 4:
         if rng.random() < 0.5:
             w = rng.randint(3, 10)
@@ -504,7 +512,8 @@ def _area_perimeter(t, rng):
                       f"It is {l} {u} long. How wide is it?", w,
                       "Take away the two long sides, then split what is left in half.",
                       f"Two long sides: {l} + {l} = {2 * l}. Left over: {per} − {2 * l} = "
-                      f"{2 * w}. Half of that is {w} {u}.")
+                      f"{2 * w}. Half of that is {w} {u}.",
+                      picture=("rect", l, w, f"{l} {u}", "?"))
         a, b, c, d = rng.randint(3, 9), rng.randint(2, 6), rng.randint(2, 6), rng.randint(2, 5)
         return _p(f"A castle hall is made of two rectangles joined together. "
                   f"One is {a} by {b} {u}. The other is {c} by {d} {u}. "
@@ -521,7 +530,8 @@ def _area_perimeter(t, rng):
                   f"{l} {u} long. What is its AREA, in square {u}?", l * w,
                   "First find the width from the perimeter. Then area = length × width.",
                   f"Two long sides use {2 * l}. {per} − {2 * l} = {2 * w}, so the width "
-                  f"is {w}. Area: {l} × {w} = {l * w} square {u}.")
+                  f"is {w}. Area: {l} × {w} = {l * w} square {u}.",
+                  picture=("rect", l, w, f"{l} {u}", "?"))
     if pick == 2:
         s = rng.randint(4, 10)
         return _p(f"A square {place} has an area of {s * s} square {u}. "
@@ -537,7 +547,8 @@ def _area_perimeter(t, rng):
               f"{ {'feet': 'foot', 'meters': 'meter'}[u] }. "
               f"How many coins does the whole fence cost?", per * cost,
               "First find the perimeter. Then multiply by the cost.",
-              f"Perimeter: {l} + {w} + {l} + {w} = {per}. Cost: {per} × {cost} = {per * cost} coins.")
+              f"Perimeter: {l} + {w} + {l} + {w} = {per}. Cost: {per} × {cost} = {per * cost} coins.",
+              picture=("rect", l, w, f"{l} {u}", f"{w} {u}"))
 
 
 def _two_step(t, rng):

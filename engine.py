@@ -9,8 +9,22 @@ from dataclasses import dataclass
 
 import config
 import story
+import tasks
 from questions import (ALL_TOPICS, TOPIC_TIPS, fmt, generate, is_correct,
                        parse_answer, severity)
+
+# Settings are kept inside safe limits, so a typo in config.py cannot make the
+# game unwinnable.
+TRIAL_QUESTIONS = max(1, int(getattr(config, "TRIAL_QUESTIONS", 5)))
+TRIAL_PASS = max(1, min(TRIAL_QUESTIONS, int(getattr(config, "TRIAL_PASS", 4))))
+TRIAL_MIN_TIER = getattr(config, "TRIAL_MIN_TIER", 3)
+TASK_XP_FACTOR = getattr(config, "TASK_XP_FACTOR", 2)
+
+# Hero codes: letters and digits that are hard to mix up (no I, L, O, U).
+_B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+_CODE_LEN = 12
+_XP_BITS = 17
+_CHECK = 16381             # prime; the check value fits in 14 bits
 
 RANKS = [
     (0, "Apprentice"),
@@ -31,7 +45,9 @@ def rank_for(xp: int) -> str:
 
 
 def _clamp(tier: int) -> int:
-    return max(config.MIN_TIER, min(config.MAX_TIER, tier))
+    lo = max(1, min(5, config.MIN_TIER))
+    hi = max(lo, min(5, config.MAX_TIER))
+    return max(lo, min(hi, tier))
 
 
 @dataclass
@@ -53,6 +69,7 @@ class Feedback:
     sage_tip: str = ""
     rank_up: str = ""
     replay: bool = False
+    is_task: bool = False
 
 
 class Game:
@@ -76,17 +93,31 @@ class Game:
                         if r.get("mix") or any(t in self.topics for t in r["topics"])]
         self.region_idx = 0
         self.enc_idx = 0
-        self.phase = "region_intro"   # region_intro | question | feedback |
-                                      # region_done | defeat | victory
+        # map | region_intro | question | task | feedback | region_done |
+        # trial_done | story | defeat | victory
+        self.phase = "map"
+        self.mode = None           # "quest" or "trial" while inside a region
+        self.half = False          # region already won: practice pays half XP
+        self._other_done = set()   # from a hero code: gems of regions switched off
+        self._other_tiers = {}     # from a hero code: levels of topics switched off
+        self.done = set()          # keys of the regions whose gem is won
+        self.beats_seen = 0        # story pages already shown
+        self.just_won = False      # the region just finished gave a NEW gem
+        self.trial_result = None
         self.enc = None
         self.question = None
+        self.task = None
         self.feedback = None
         self.input_error = ""
         self.qcount = 0
         self.last_topic = None
-        self.region_paid = {}      # encounter index -> answers already paid XP
+        self._paid = {}            # region key -> {encounter index: answers paid}
+        self.region_paid = {}      # the entry of _paid for the current region
         self.region_defeats = 0
         self._bags = {}
+        n = sum(1 for r in self.regions if not r.get("final"))
+        # Story pages appear after the 1st and 3rd gem and when the Peak opens.
+        self._beat_at = [min(1, n), min(3, n), n][:len(story.BEATS)] if n else []
 
     # ------------------------------------------------------------------
     @property
@@ -95,11 +126,39 @@ class Game:
 
     @property
     def is_last_region(self):
-        return self.region_idx == len(self.regions) - 1
+        return bool(self.region.get("final"))
+
+    @property
+    def all_done(self):
+        return all(r["key"] in self.done for r in self.regions)
+
+    def status(self, i):
+        """'done', 'open' or 'locked' for region number i."""
+        r = self.regions[i]
+        if r["key"] in self.done:
+            return "done"
+        if r.get("final") and any(o["key"] not in self.done
+                                  for o in self.regions if not o.get("final")):
+            return "locked"
+        return "open"
+
+    def can_trial(self, i):
+        """The final region's story must be played in full once."""
+        r = self.regions[i]
+        return self.status(i) != "locked" and (not r.get("final") or r["key"] in self.done)
+
+    def _beats_due(self):
+        won = sum(1 for r in self.regions
+                  if not r.get("final") and r["key"] in self.done)
+        return sum(1 for need in self._beat_at if need <= won)
+
+    @property
+    def beat(self):
+        return story.BEATS[self.beats_seen]
 
     def _pick_topic(self, kind):
         region = self.region
-        if region.get("mix") and kind in ("fight", "boss"):
+        if region.get("mix") and kind in ("fight", "boss", "trial"):
             pool = self.topics
         else:
             pool = [t for t in region["topics"] if t in self.topics] or self.topics
@@ -113,6 +172,18 @@ class Game:
     def _begin_encounter(self, healer=False):
         spec = story.HEALER if healer else self.region["encounters"][self.enc_idx]
         kind = spec["kind"]
+        if kind == "task":
+            topic = tasks.TASK_TOPIC[spec["task"]]
+            tier = _clamp(self.tiers.get(topic, config.START_TIER))
+            self.enc = {"spec": spec, "kind": kind, "attempt": 0, "asked": 1,
+                        "potion": False, "monster_hp": 0, "monster_max": 0}
+            self.task = tasks.generate(spec["task"], tier, self.rng)
+            self.question = None
+            self.feedback = None
+            self.input_error = ""
+            self.qcount += 1
+            self.phase = "task"
+            return
         hits = 0
         if kind == "fight":
             hits = config.MONSTER_HITS
@@ -137,6 +208,8 @@ class Game:
             tier -= 1
         if enc["kind"] == "boss":
             tier = max(tier, 2)
+        if enc["kind"] == "trial" and enc["prove"]:
+            tier = max(tier, TRIAL_MIN_TIER)   # skipping the quest must be earned
         tier = _clamp(tier)
         old_text = self.question.text if self.question else None
         for _ in range(6):
@@ -183,12 +256,73 @@ class Game:
     # ------------------------------------------------------------------
     # Actions called by the screens
     # ------------------------------------------------------------------
+    def choose_region(self, i, mode="quest"):
+        """Picked on the map. mode: 'quest' (full story) or 'trial' (5 questions)."""
+        if self.phase != "map" or not 0 <= i < len(self.regions):
+            return
+        if self.status(i) == "locked" or (mode == "trial" and not self.can_trial(i)):
+            return
+        self.region_idx = i
+        self.enc_idx = 0
+        self.enc = self.question = self.task = self.feedback = None
+        self.mode = mode
+        self.half = self.region["key"] in self.done
+        if mode == "trial":
+            self._start_trial()
+        else:
+            self.phase = "region_intro"
+
+    def leave_region(self):
+        """Back to the map from inside a region. XP is kept, the quest is not."""
+        if self.phase not in ("region_intro", "question", "task", "feedback", "defeat"):
+            return
+        self.enc = self.question = self.task = self.feedback = None
+        self.input_error = ""
+        self.hp = config.MAX_HP
+        self.phase = "map"
+
     def start_region(self):
         if self.phase != "region_intro":
             return
-        self.region_paid = {}
+        self.region_paid = self._paid.setdefault(self.region["key"], {})
         self.region_defeats = 0
         self._enter_region()
+
+    # --- speed trial ---------------------------------------------------
+    def _start_trial(self):
+        self.trial_result = None
+        self.half = self.region["key"] in self.done
+        self.enc = {"spec": story.TRIAL_HOST, "kind": "trial", "attempt": 0,
+                    "asked": 0, "right": 0, "total": TRIAL_QUESTIONS,
+                    "potion": False, "monster_hp": 0, "monster_max": 0,
+                    "prove": self.region["key"] not in self.done}
+        self._new_question()
+
+    def retry_trial(self):
+        if self.phase == "trial_done":
+            self._start_trial()
+
+    def leave_trial(self):
+        if self.phase == "trial_done":
+            self._after_region()
+
+    def _after_region(self):
+        self.enc = self.question = self.task = self.feedback = None
+        self.phase = "story" if self.beats_seen < self._beats_due() else "map"
+
+    def continue_story(self):
+        if self.phase != "story":
+            return
+        self.beats_seen += 1
+        self._after_region()
+
+    def show_certificate(self):
+        if self.phase == "map" and self.all_done:
+            self.phase = "victory"
+
+    def back_to_map(self):
+        if self.phase == "victory":
+            self._after_region()
 
     def _enter_region(self):
         self.hp = config.MAX_HP
@@ -213,6 +347,8 @@ class Game:
                 return False
         self.input_error = ""
         correct = is_correct(q, value)
+        if enc["kind"] == "trial":
+            return self._submit_trial(q, value, correct)
         fight = enc["kind"] in ("fight", "boss")
         first = enc["attempt"] == 0
         old_rank = rank_for(self.xp)
@@ -238,13 +374,15 @@ class Game:
                 if not fb.replay:
                     self.region_paid[self.enc_idx] = step + 1
             fb.xp = 0 if fb.replay else xp
+            if self.half:
+                fb.xp //= 2
             if fight:
                 enc["monster_hp"] -= 1
                 if enc["monster_hp"] <= 0:
                     fb.encounter_over = True
                     if not fb.replay:
                         fb.bonus = (config.BOSS_BONUS if enc["kind"] == "boss"
-                                    else config.MONSTER_BONUS)
+                                    else config.MONSTER_BONUS) // (2 if self.half else 1)
             else:
                 fb.encounter_over = True
                 if enc["potion"]:
@@ -272,10 +410,97 @@ class Game:
         self.phase = "question" if fb.retry else "feedback"
         return True
 
+    def _submit_trial(self, q, value, correct):
+        enc = self.enc
+        old_rank = rank_for(self.xp)
+        fb = Feedback(correct=correct, topic=q.topic, answer_text=fmt(q.answer),
+                      your_answer=fmt(value), explanation=q.explanation)
+        fb.tier_change, sage = self._record(q.topic, correct)
+        if sage:
+            fb.sage_tip = TOPIC_TIPS[q.topic]
+        if correct:
+            enc["right"] += 1
+            fb.xp = config.XP_BASE * q.tier + (config.STREAK_BONUS if self.streak >= 3 else 0)
+            if self.half:
+                fb.xp //= 2
+            self.xp += fb.xp
+        fb.encounter_over = enc["asked"] >= enc["total"]
+        if rank_for(self.xp) != old_rank:
+            fb.rank_up = rank_for(self.xp)
+        self.feedback = fb
+        self.phase = "feedback"
+        return True
+
+    def submit_task(self, value) -> bool:
+        """Check a hands-on task. One hint and a second try, like a riddle."""
+        if self.phase != "task":
+            return False
+        task, enc = self.task, self.enc
+        correct = tasks.check(task, value)
+        first = enc["attempt"] == 0
+        old_rank = rank_for(self.xp)
+        fb = Feedback(correct=correct, topic=task.topic, answer_text=task.solution,
+                      your_answer=tasks.describe(task, value),
+                      explanation=task.explanation, is_task=True)
+        if first and task.topic in self.topics:
+            fb.tier_change, sage = self._record(task.topic, correct)
+            if sage:
+                fb.sage_tip = TOPIC_TIPS[task.topic]
+        elif first:
+            self.streak = self.streak + 1 if correct else 0
+            self.best_streak = max(self.best_streak, self.streak)
+        if correct:
+            xp = config.XP_BASE * task.tier * (TASK_XP_FACTOR if first else 1)
+            if self.streak >= 3:
+                xp += config.STREAK_BONUS
+            fb.replay = self.region_paid.get(self.enc_idx, 0) > 0
+            if not fb.replay:
+                self.region_paid[self.enc_idx] = 1
+            fb.xp = 0 if fb.replay else xp
+            if self.half:
+                fb.xp //= 2
+            self.xp += fb.xp
+            fb.encounter_over = True
+        elif first:
+            fb.retry = True
+            enc["attempt"] = 1
+        else:
+            fb.encounter_over = True
+        if rank_for(self.xp) != old_rank:
+            fb.rank_up = rank_for(self.xp)
+        self.feedback = fb
+        self.phase = "task" if fb.retry else "feedback"
+        return True
+
+    def _win_gem(self):
+        key = self.region["key"]
+        self.just_won = key not in self.done
+        self.done.add(key)
+        self._paid.pop(key, None)
+
     def advance(self):
         """Move on from the feedback screen."""
         fb = self.feedback
         if self.phase != "feedback" or fb is None:
+            return
+        if self.enc["kind"] == "trial":
+            if not fb.encounter_over:
+                self._new_question()
+                return
+            right = self.enc["right"]
+            passed = right >= TRIAL_PASS
+            bonus = 0
+            self.just_won = False
+            if passed:
+                self._win_gem()
+                if self.just_won:
+                    bonus = config.BOSS_BONUS
+                    self.xp += bonus
+            self.trial_result = {"right": right, "total": self.enc["total"],
+                                 "passed": passed, "new_gem": self.just_won,
+                                 "bonus": bonus}
+            self.feedback = None
+            self.phase = "trial_done"
             return
         if fb.defeated:
             self.defeats += 1
@@ -290,6 +515,7 @@ class Game:
         encounters = self.region["encounters"]
         if self.enc_idx >= len(encounters):
             self.feedback = None
+            self._win_gem()
             self.phase = "region_done"
             return
         nxt = encounters[self.enc_idx]
@@ -312,13 +538,72 @@ class Game:
         if self.phase != "region_done":
             return
         if self.is_last_region:
+            self.enc = self.question = self.task = None
             self.phase = "victory"
             return
-        self.region_idx += 1
-        self.enc_idx = 0
-        self.enc = None
-        self.question = None
-        self.phase = "region_intro"
+        self._after_region()
+
+    # --- hero code: gems, skill levels, XP and story pages in twelve characters ---
+    def to_code(self) -> str:
+        v = 0
+        for r in story.REGIONS:
+            v = (v << 1) | (r["key"] in self.done or r["key"] in self._other_done)
+        for t in ALL_TOPICS:
+            tier = self.tiers.get(t, self._other_tiers.get(t, config.START_TIER))
+            v = (v << 3) | max(1, min(5, tier))
+        v = (v << _XP_BITS) | min(self.xp, 2 ** _XP_BITS - 1)
+        v = (v << 2) | min(self.beats_seen, 3)
+        v = v * 16384 + v % _CHECK
+        out = ""
+        for _ in range(_CODE_LEN):
+            out = _B32[v & 31] + out
+            v >>= 5
+        return "-".join(out[i:i + 4] for i in range(0, _CODE_LEN, 4))
+
+    @classmethod
+    def from_code(cls, name: str, code: str, seed: int | None = None):
+        """Rebuild a hero from a code. Returns None if the code is not valid."""
+        text = (code or "").upper().replace("O", "0").replace("I", "1").replace("L", "1")
+        text = "".join(ch for ch in text if ch.isalnum())
+        if len(text) != _CODE_LEN or any(ch not in _B32 for ch in text):
+            return None
+        v = 0
+        for ch in text:
+            v = v * 32 + _B32.index(ch)
+        check, v = v % 16384, v // 16384
+        if v % _CHECK != check:
+            return None
+        beats = v & 3
+        v >>= 2
+        xp = v & (2 ** _XP_BITS - 1)
+        v >>= _XP_BITS
+        tiers = {}
+        for t in reversed(ALL_TOPICS):
+            tiers[t] = v & 7
+            v >>= 3
+        if any(not 1 <= x <= 5 for x in tiers.values()):
+            return None
+        done = set()
+        for r in reversed(story.REGIONS):
+            if v & 1:
+                done.add(r["key"])
+            v >>= 1
+        if v:
+            return None
+        g = cls(name, seed)
+        g.xp = xp
+        g.tiers = {t: _clamp(tiers[t]) for t in g.topics}
+        g.best_tiers = dict(g.tiers)
+        g.done = {r["key"] for r in g.regions if r["key"] in done}
+        # Keep what belongs to regions and topics the teacher has switched off,
+        # so it is not lost if they are switched on again.
+        g._other_done = done - g.done
+        g._other_tiers = {t: x for t, x in tiers.items() if t not in g.topics}
+        # A story page that was due but not read yet is shown first.
+        g.beats_seen = min(beats, g._beats_due(), len(story.BEATS))
+        if g.beats_seen < g._beats_due():
+            g.phase = "story"
+        return g
 
     # ------------------------------------------------------------------
     def summary(self):
