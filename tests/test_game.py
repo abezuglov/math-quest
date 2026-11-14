@@ -21,7 +21,8 @@ def test_generators_are_well_formed(topic, tier):
         q = generate(topic, tier, rng)
         assert q.text and q.hint and q.explanation
         if q.kind == "choice":
-            assert q.answer in q.choices and len(set(q.choices)) == 2
+            assert q.answer in q.choices
+            assert 2 <= len(set(q.choices)) == len(q.choices) <= 4
         else:
             assert isinstance(q.answer, Fraction) and q.answer > 0
             # the displayed answer must be accepted when typed back in
@@ -514,7 +515,7 @@ def test_pictures_are_valid_svg():
                     ok(svg)
                 else:
                     assert svg is None
-    assert drawn == {"array", "bars", "pie", "rect"}
+    assert drawn == {"array", "bars", "pie", "rect", "vmul"}
     for n, boats, each in [(17, 3, 0), (17, 3, 5), (17, 3, 9), (95, 6, 15), (4, 2, 2)]:
         ok(pictures.share_fig(n, boats, each))
     for shaded in range(0, 13):

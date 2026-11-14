@@ -392,6 +392,60 @@ def share_fig(n, boats, each):
     return _svg(W, H, body, f"{boats} boats with {each} crates each, {left} crates on the dock")
 
 
+def vmul_fig(a, b, hide, pos):
+    """a x b worked in columns with partial products; one digit is a '?' box.
+
+    hide is 'factor' (ones digit of b), 'partial' (second row) or 'total'.
+    pos counts digits from the right (0 = ones).
+    """
+    ones, tens = b % 10, b // 10 * 10
+    rows = [("", a), ("×", b), None, ("", a * ones), ("+", a * tens), None,
+            ("", a * b)]
+    target = {"factor": 1, "partial": 4, "total": 6}[hide]
+    cw, comma = 22, 9
+
+    def span(n):
+        text = f"{n:,}"
+        return sum(comma if ch == "," else cw for ch in text)
+
+    widest = max(span(n) for _, n in (r for r in rows if r))
+    left = 30                                  # room for the × and + signs
+    right = left + widest + 14
+    W = right + 24
+    body, y = "", 12
+    for i, row in enumerate(rows):
+        if row is None:
+            ly = y + 10
+            body += (f"<line x1='{left - 16}' y1='{ly}' x2='{right + 4}' y2='{ly}' "
+                     f"stroke='{INK}' stroke-width='2'/>")
+            y = ly + 4
+            continue
+        sign, n = row
+        y += 30
+        digit_i, x_edge = 0, right
+        for ch in f"{n:,}"[::-1]:
+            step = comma if ch == "," else cw
+            x = x_edge - step / 2
+            x_edge -= step
+            hidden = i == target and ch != "," and digit_i == pos
+            if hidden:
+                body += (f"<rect x='{x - 10:.0f}' y='{y - 22}' width='20' height='28' "
+                         f"fill='#fff4c2' stroke='#c0392b' stroke-width='2'/>"
+                         f"<text x='{x:.0f}' y='{y}' text-anchor='middle' {FONT} "
+                         f"font-size='20' font-weight='bold' fill='#c0392b'>?</text>")
+            else:
+                body += (f"<text x='{x:.0f}' y='{y}' text-anchor='middle' {FONT} "
+                         f"font-size='22' fill='{INK}'>{ch}</text>")
+            if ch != ",":
+                digit_i += 1
+        if sign:
+            body += (f"<text x='{left - 16}' y='{y}' {FONT} font-size='22' "
+                     f"fill='{INK}'>{sign}</text>")
+    H = y + 16
+    return _svg(W, H, _card(W, H) + body,
+                f"{a} times {b} worked out in columns, with one digit hidden")
+
+
 # --------------------------------------------------------------------------
 def for_question(picture):
     """Turn a Question.picture tuple into SVG text (or None)."""
@@ -406,4 +460,6 @@ def for_question(picture):
         return pie(*args)
     if kind == "rect":
         return rect_fig(*args)
+    if kind == "vmul":
+        return vmul_fig(*args)
     return None

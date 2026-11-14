@@ -69,6 +69,14 @@ the Great Ledger. A miss gives a hint and a second try.
 **Pictures:** fraction bars, a pie, rectangles and dot arrays are drawn on the
 easier questions.
 
+**Worksheet-style questions** (modelled on 4th-grade homework, Lesson 5.6):
+estimating a 2-digit × 2-digit product by rounding to tens, 2-digit × 2-digit
+word problems (including money), picking the right product from four answers,
+finding a digit the Number Thief smudged in a worked multiplication, "twice as
+many" comparisons, reading a dot array as a division equation, "is there
+enough?" problems, subtracting across zeros (like 296,004 − 99,238) and
+4-digit additions past 10,000.
+
 **Story:** besides each region's own scenes, three story pages appear after the
 1st gem, the 3rd gem and the last gem before the Peak, in whatever order the
 regions are played.

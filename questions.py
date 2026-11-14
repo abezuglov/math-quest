@@ -47,6 +47,8 @@ TOPIC_TIPS = {
 }
 
 ITEMS = ["gold coins", "apples", "lanterns", "seashells", "acorns", "marbles"]
+NAMES = ["Mira", "Tom", "Lena", "Omar", "Jen", "Theo", "Rosa", "Sam"]
+TIMES_WORDS = {2: "twice", 3: "three times", 4: "four times", 5: "five times"}
 UNITS = ["feet", "meters"]
 
 
@@ -174,6 +176,18 @@ def _mul_steps(a, b):
            f"{', and '.join(pieces)}. Add them: {total} = {a * b:,}"
 
 
+def _round10(n):
+    """Round to the nearest ten, 5 rounds up (as taught in 4th grade)."""
+    return (n + 5) // 10 * 10
+
+
+def _digit_slots(n, skip_last=False):
+    """Positions (0 = ones) of the non-zero digits of n."""
+    digits = str(n)[::-1]
+    return [i for i, ch in enumerate(digits)
+            if ch != "0" and not (skip_last and i == 0)]
+
+
 def _div_steps(n, d):
     """Explain n / d (exact) by taking out easy groups (partial quotients)."""
     q = n // d
@@ -201,7 +215,7 @@ def _addition(t, rng):
                   f"The missing number is {s:,} − {a:,} = {b:,}.")
     lo_a, hi_a, lo_b, hi_b = {1: (11, 49, 11, 49), 2: (25, 99, 25, 99),
                               3: (100, 899, 100, 899),
-                              4: (1000, 8999, 250, 4999),
+                              4: (1000, 8999, 250, 8999),
                               5: (10000, 50000, 1000, 9999)}[t]
     a, b = rng.randint(lo_a, hi_a), rng.randint(lo_b, hi_b)
     item = rng.choice(ITEMS)
@@ -228,9 +242,19 @@ def _subtraction(t, rng):
     elif t == 3:
         a = rng.randint(400, 999); b = rng.randint(101, a - 50)
     elif t == 4:
+        if rng.random() < 0.4:
+            return _across_zeros(rng.randint(3, 9) * 1000
+                                 + rng.choice([0, rng.randint(1, 9),
+                                               rng.randint(1, 9) * 10]),
+                                 rng.randint(1200, 2999), rng)
         a = rng.choice([rng.randint(2, 9) * 1000, rng.randint(1500, 9999)])
         b = rng.randint(125, 999)
     else:
+        if rng.random() < 0.4:
+            return _across_zeros(rng.randint(120, 950) * 1000
+                                 + rng.choice([0, rng.randint(1, 9),
+                                               rng.randint(1, 9) * 10]),
+                                 rng.randint(10000, 99999), rng)
         a = rng.randint(10000, 50000); b = rng.randint(1200, 9500)
     item = rng.choice(ITEMS)
     text = rng.choice([
@@ -243,22 +267,170 @@ def _subtraction(t, rng):
               f"{_sub_steps(a, b)}. The answer is {a - b:,}.")
 
 
+def _across_zeros(a, b, rng):
+    """Subtract from a number with zeros in it (like 296,004 - 99,238).
+
+    Explained the friendly way: subtract a round number, then add back.
+    """
+    ans = a - b
+    r = (b // 1000 + 1) * 1000
+    back = r - b
+    text = rng.choice([
+        f"What is {a:,} − {b:,}?",
+        f"The royal vault held {a:,} gold coins. The Number Thief carried off "
+        f"{b:,}. How many coins are still in the vault?",
+    ])
+    return _p(text, ans,
+              f"Zeros make regrouping tricky. Try a round number: take away "
+              f"{r:,} instead, then add back what you took too much.",
+              f"{b:,} is {back:,} less than {r:,}. {a:,} − {r:,} = {a - r:,}, then "
+              f"add back {back:,}: {a - r:,} + {back:,} = {ans:,}. "
+              f"Check: {ans:,} + {b:,} = {a:,}.")
+
+
+def _times_as_many(t, rng):
+    """'Jen scores twice as many points' (multiplicative comparison)."""
+    k = rng.randint(2, 5) if t <= 2 else rng.randint(2, 4)
+    base = rng.randint(3, 10) if t <= 2 else rng.randint(11, 60)
+    a, b = rng.sample(NAMES, 2)
+    word = TIMES_WORDS[k]
+    if rng.random() < 0.5:
+        text = (f"In a bowling game, {a} scores {base} points. {b} scores "
+                f"{word} as many points. How many points does {b} score?")
+    else:
+        item = rng.choice(ITEMS)
+        text = (f"{a} has {base} {item}. {b} has {word} as many. "
+                f"How many {item} does {b} have?")
+    return _p(text, base * k,
+              f"'{word.capitalize()} as many' means multiply by {k}.",
+              f"{word.capitalize()} as many: {base} × {k} = {base * k}.")
+
+
+def _estimate_product(rng):
+    """Round both factors to the nearest ten, then multiply."""
+    while True:
+        a, b = rng.randint(12, 98), rng.randint(12, 98)
+        if a % 10 and b % 10:
+            break
+    ra, rb = _round10(a), _round10(b)
+    return _p(f"Estimate {a} × {b} by rounding each number to the nearest ten. "
+              f"What is your estimate?", ra * rb,
+              "Round each number to the nearest ten first (5 or more rounds up). "
+              "Then multiply the round numbers: multiply the front digits and "
+              "add the zeros.",
+              f"{a} rounds to {ra} and {b} rounds to {rb}. "
+              f"{ra} × {rb} = {ra * rb:,}. (The exact answer is {a * b:,}, "
+              f"close to the estimate.)")
+
+
+def _two_digit_story(rng):
+    """2-digit x 2-digit word problem: crates of items, or money."""
+    a, b = rng.randint(13, 98), rng.randint(13, 98)
+    name, item = rng.choice(NAMES), rng.choice(ITEMS)
+    if rng.random() < 0.5:
+        text = (f"{name} buys {a} crates of {item}. There are {b} {item} in each "
+                f"crate. How many {item} does {name} buy?")
+    else:
+        toy = rng.choice(["toy dragons", "toy trains", "kites", "wooden swords"])
+        text = (f"A castle shop sells {a} {toy}. Each one costs ${b}. "
+                f"How many dollars does the shop earn?")
+    return _p(text, a * b,
+              f"Split {b} into tens and ones. Multiply {a} by each part, then add.",
+              _mul_steps(b, a) + ".")
+
+
+def _pick_the_product(rng):
+    """Multiple choice with tempting wrong answers (estimate + ones-digit check)."""
+    while True:
+        a, b = rng.randint(21, 98), rng.randint(13, 49)
+        if a % 10 and b % 10:
+            break
+    c = a * b
+    wrong = [a * (b % 10) + a * (b // 10),          # forgot the zero in row 2
+             c + rng.choice([-6, -4, 4, 6]),         # wrong ones digit
+             c + a]                                  # one group too many
+    while len(set(wrong) - {c}) < 3:
+        wrong.append(c + rng.choice([-20, -10, 10, 20]) * rng.randint(1, 5))
+    options = sorted({c, *sorted(set(wrong) - {c})[:3]})
+    name, item = rng.choice(NAMES), rng.choice(ITEMS)
+    ra, rb = _round10(a), _round10(b)
+    ones = (a % 10) * (b % 10)
+    return _p(f"{name} buys {b} packs of {item}. There are {a} {item} in each pack. "
+              f"How many {item} does {name} buy?", fmt(c),
+              "Estimate first by rounding to tens. Then check which answer has "
+              "the right ones digit.",
+              f"Estimate: {ra} × {rb} = {ra * rb:,}. The ones digit must match "
+              f"{a % 10} × {b % 10} = {ones}, so it ends in {ones % 10}. "
+              f"Exact: {_mul_steps(b, a)}.",
+              kind="choice", choices=[fmt(x) for x in options])
+
+
+def _missing_digit(rng):
+    """The Number Thief smudged one digit of a worked 2-digit x 2-digit problem."""
+    while True:
+        a, b = rng.randint(12, 98), rng.randint(12, 98)
+        if b % 10 >= 2:
+            break
+    ones, tens = b % 10, b // 10 * 10
+    p1, p2, tot = a * ones, a * tens, a * b
+    mode = rng.choice(["factor", "partial", "total"])
+    slots = {"partial": _digit_slots(p2, skip_last=True),
+             "total": _digit_slots(tot)}.get(mode, [0])
+    if not slots:
+        mode, slots = "factor", [0]
+    pos = rng.choice(slots)
+    if mode == "factor":
+        return _p(f"The Number Thief smudged one digit of the number that {a} "
+                  f"was multiplied by. What digit is under the box?", ones,
+                  f"Look at the first row under the line: {a} × ? = {p1:,}.",
+                  f"{a} × {ones} = {p1:,}, so the missing digit is {ones}.",
+                  picture=("vmul", a, b, "factor", 0))
+    if mode == "partial":
+        digit = int(str(p2)[::-1][pos])
+        return _p(f"The Number Thief smudged one digit while {a} × {b} was being "
+                  f"worked out. What digit is under the box?", digit,
+                  f"The second row is {a} × {tens}. Work it out.",
+                  f"{a} × {tens} = {p2:,}, so the missing digit is {digit}.",
+                  picture=("vmul", a, b, "partial", pos))
+    digit = int(str(tot)[::-1][pos])
+    return _p(f"The Number Thief smudged one digit of the answer to {a} × {b}. "
+              f"What digit is under the box?", digit,
+              "Add the two rows above the bottom line.",
+              f"{p1:,} + {p2:,} = {tot:,}, so the missing digit is {digit}.",
+              picture=("vmul", a, b, "total", pos))
+
+
 def _multiplication(t, rng):
     top = config.TIMES_TABLE_MAX
+    r = rng.random()
     if t == 1:
         a, b = rng.choice([2, 5, 10]), rng.randint(1, 10)
     elif t == 2:
+        if r < 0.2:
+            return _times_as_many(t, rng)
         a, b = rng.randint(2, 10), rng.randint(2, 10)
     elif t == 3:
+        if r < 0.2:
+            return _times_as_many(t, rng)
         a, b = rng.randint(6, top), rng.randint(6, top)
         if rng.random() < 0.3:
             return _p(f"Fill in the missing number:   {a} × ? = {a * b}", b,
                       f"Count by {a}s until you reach {a * b}.",
                       f"{a} × {b} = {a * b}, so the missing number is {b}.")
     elif t == 4:
+        if r < 0.25:
+            return _estimate_product(rng)
+        if r < 0.45:
+            return _two_digit_story(rng)
         a, b = rng.randint(12, 99), rng.randint(3, 9)
     else:
-        if rng.random() < 0.5:
+        if r < 0.2:
+            return _missing_digit(rng)
+        if r < 0.35:
+            return _pick_the_product(rng)
+        if r < 0.5:
+            return _two_digit_story(rng)
+        if r < 0.7:
             a, b = rng.randint(101, 999), rng.randint(3, 9)
             return _p(f"What is {a} × {b}?", a * b,
                       f"Split {a} into hundreds, tens and ones. "
@@ -298,9 +470,24 @@ def _remainder_q(n, d, item, rng):
               f"So there are {q} full boxes (with {rem} left over).")
 
 
+def _array_division(t, rng):
+    """Read an array of dots as a division equation:  ? / cols = rows."""
+    rows = rng.randint(3, 6 if t <= 2 else 9)
+    cols = rng.randint(4, 8 if t <= 2 else 12)
+    n = rows * cols
+    return _p(f"Look at the array of dots. Complete the division equation:   "
+              f"? ÷ {cols} = {rows}", n,
+              f"The ? is ALL the dots. There are {rows} rows with {cols} dots "
+              f"in each row.",
+              f"{rows} rows × {cols} dots = {n} dots, so {n} ÷ {cols} = {rows}.",
+              picture=("array", rows, cols))
+
+
 def _division(t, rng):
     top = config.TIMES_TABLE_MAX
     item = rng.choice(ITEMS)
+    if t in (2, 3) and rng.random() < 0.2:
+        return _array_division(t, rng)
     if t == 1:
         d, q = rng.choice([2, 5, 10]), rng.randint(1, 10)
     elif t == 2:
@@ -551,6 +738,28 @@ def _area_perimeter(t, rng):
               picture=("rect", l, w, f"{l} {u}", f"{w} {u}"))
 
 
+def _enough(rng):
+    """'27 students, 15 pencils each, 500 pencils: is that enough?'"""
+    kids, each = rng.randint(18, 32), rng.randint(6, 25)
+    need = kids * each
+    have = (need // 50 + rng.choice([-1, 0, 1, 2])) * 50
+    if have <= 0 or have == need:
+        have = need + 50
+    thing = rng.choice(["pencils", "stickers", "crayons", "gold stars"])
+    enough = have >= need
+    gap = (f"there are {have - need} {thing} left over" if enough
+           else f"{need - have} more {thing} are needed")
+    return _p(f"There are {kids} pupils in the castle school. The teacher starts "
+              f"the year with {have} {thing}. Will there be enough to give each "
+              f"pupil {each} {thing} during the year?",
+              "Yes, enough" if enough else "No, not enough",
+              f"Step 1: multiply to find how many {thing} are needed. "
+              f"Step 2: compare with {have}.",
+              f"Needed: {kids} × {each} = {need}. The teacher has {have}, which is "
+              f"{'more than' if enough else 'less than'} {need}, so {gap}.",
+              kind="choice", choices=["Yes, enough", "No, not enough"])
+
+
 def _two_step(t, rng):
     item = rng.choice(ITEMS)
     if t == 1:
@@ -580,7 +789,10 @@ def _two_step(t, rng):
                   "Step 1: add to find how many children. Step 2: multiply by the stickers.",
                   f"{a} + {b} = {a + b} children, then {a + b} × {c} = {(a + b) * c}.")
     if t == 4:
-        if rng.random() < 0.5:
+        pick = rng.random()
+        if pick < 0.34:
+            return _enough(rng)
+        if pick < 0.67:
             c, a, k = rng.randint(2, 6), rng.randint(2, 6), rng.randint(2, 6)
             b = c * k
             return _p(f"There are {a} crates with {b} candles in each. The candles "
