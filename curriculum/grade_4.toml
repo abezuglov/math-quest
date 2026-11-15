@@ -1,0 +1,108 @@
+# 4th grade: The Number Thief of Arithmos
+#
+# The seven topics below are the original hand-written generators from
+# questions.py ("generator = ..."). Their ids and ORDER must never change:
+# old hero codes depend on them. New topics may only be added at the END.
+# A teacher who wants a topic out of the game sets `enabled = false`.
+
+grade = "4"
+name  = "4th grade"
+title = "The Number Thief of Arithmos"
+
+# ---------------------------------------------------------------------------
+# Regions (map spots), in the order they appear on the map.
+# ---------------------------------------------------------------------------
+[[region]]
+key    = "village"
+name   = "Market Village"
+gem    = "Gem of Sums"
+topics = ["addition", "subtraction"]
+task   = "coins"
+task_topic = "addition"
+
+[[region]]
+key    = "mines"
+name   = "Multiplication Mines"
+gem    = "Gem of Times"
+topics = ["multiplication"]
+task   = "multiples"
+task_topic = "multiplication"
+
+[[region]]
+key    = "docks"
+name   = "Division Docks"
+gem    = "Gem of Shares"
+topics = ["division"]
+task   = "share"
+task_topic = "division"
+
+[[region]]
+key    = "forest"
+name   = "Fraction Forest"
+gem    = "Gem of Parts"
+topics = ["fractions"]
+task   = "shade"
+task_topic = "fractions"
+
+[[region]]
+key    = "castle"
+name   = "Castle Builders"
+gem    = "Gem of Measures"
+topics = ["area_perimeter"]
+task   = "garden"
+task_topic = "area_perimeter"
+
+[[region]]
+key    = "peak"
+name   = "Dragon's Peak"
+gem    = "Gem of Wisdom"
+topics = ["two_step"]
+mix    = true
+final  = true
+task   = "ledger"
+task_topic = "two_step"
+
+# ---------------------------------------------------------------------------
+# Topics. Label and tip come from questions.py when a generator is used.
+# ---------------------------------------------------------------------------
+[[topic]]
+id       = "addition"
+standard = "4.NBT.B.4"
+  [[topic.question]]
+  generator = "addition"
+
+[[topic]]
+id       = "subtraction"
+standard = "4.NBT.B.4"
+  [[topic.question]]
+  generator = "subtraction"
+
+[[topic]]
+id       = "multiplication"
+standard = "4.NBT.B.5"
+  [[topic.question]]
+  generator = "multiplication"
+
+[[topic]]
+id       = "division"
+standard = "4.NBT.B.6"
+  [[topic.question]]
+  generator = "division"
+
+[[topic]]
+id       = "fractions"
+standard = "4.NF.A-B"
+  [[topic.question]]
+  generator = "fractions"
+
+[[topic]]
+id       = "area_perimeter"
+standard = "4.MD.A.3"
+  [[topic.question]]
+  generator = "area_perimeter"
+
+[[topic]]
+id       = "two_step"
+standard = "4.OA.A.3"
+  [[topic.question]]
+  generator = "two_step"
