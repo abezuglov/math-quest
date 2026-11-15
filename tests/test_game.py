@@ -359,7 +359,7 @@ def test_hero_code_brings_back_gems_levels_and_xp():
         while g.phase == "story":
             g.continue_story()
     code = g.to_code()
-    assert len(code) == 14 and code[4] == code[9] == "-"
+    assert len(code) == 19 and code[0] == "4" and code[4] == code[9] == code[14] == "-"
     h = Game.from_code("Mia", code.lower().replace("-", " "))
     assert h is not None and h.done == g.done and h.xp == g.xp and h.tiers == g.tiers
     assert h.phase == "map" and h.beats_seen == 2      # old story pages are not replayed

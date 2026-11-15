@@ -23,9 +23,111 @@ TASK_XP_FACTOR = getattr(config, "TASK_XP_FACTOR", 2)
 
 # Hero codes: letters and digits that are hard to mix up (no I, L, O, U).
 _B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-_CODE_LEN = 12
+_V1_LEN = 12               # the old 4th-grade-only code
+_V2_MIN_DIGITS = 15        # so a v2 code (16+ characters) is never mistaken for v1
 _XP_BITS = 17
+_TOPIC_BITS = 5            # a grade may have up to 31 topics
 _CHECK = 16381             # prime; the check value fits in 14 bits
+
+
+def _clean_code(code: str) -> str:
+    text = (code or "").upper().replace("O", "0").replace("I", "1").replace("L", "1")
+    return "".join(ch for ch in text if ch.isalnum())
+
+
+def _digits(v: int, n: int) -> str:
+    out = ""
+    for _ in range(n):
+        out = _B32[v & 31] + out
+        v >>= 5
+    assert v == 0, "code value does not fit"
+    return out
+
+
+def _value(digits: str) -> int:
+    v = 0
+    for ch in digits:
+        v = v * 32 + _B32.index(ch)
+    return v
+
+
+def encode_code(grade: str, gems: list, levels: list, xp: int, beats: int) -> str:
+    """Hero code v2: the grade, then base-32 digits holding (high to low) the
+    gems (6 bits), one level per topic in file order (3 bits each), XP (17
+    bits), story pages (2 bits), the topic count (5 bits) and a check value
+    (14 bits). The length grows with the number of topics; dashes every 4."""
+    if not 1 <= len(levels) < 2 ** _TOPIC_BITS:
+        raise ValueError("a grade may have 1 to 31 topics")
+    v = 0
+    for won in gems:
+        v = (v << 1) | bool(won)
+    for level in levels:
+        v = (v << 3) | max(1, min(5, int(level)))
+    v = (v << _XP_BITS) | max(0, min(int(xp), 2 ** _XP_BITS - 1))
+    v = (v << 2) | max(0, min(int(beats), 3))
+    v = (v << _TOPIC_BITS) | len(levels)
+    v = v * 16384 + v % _CHECK
+    bits = len(gems) + 3 * len(levels) + _XP_BITS + 2 + _TOPIC_BITS + 14
+    n = max(_V2_MIN_DIGITS, -(-bits // 5))
+    n = -(-(n + 1) // 4) * 4 - 1          # grade + digits is a multiple of 4
+    text = str(grade).upper() + _digits(v, n)
+    return "-".join(text[i:i + 4] for i in range(0, len(text), 4))
+
+
+def decode_code(code: str):
+    """(grade, gems, levels, xp, beats) from a hero code, or None if it is not
+    valid. Old 12-character codes (no grade letter) are 4th grade."""
+    text = _clean_code(code)
+    if len(text) == _V1_LEN and all(ch in _B32 for ch in text):
+        return _decode_v1(text)
+    grade, digits = text[:1], text[1:]
+    if (grade not in curriculum.load_all() or len(text) % 4 or len(text) < 16
+            or any(ch not in _B32 for ch in digits)):
+        return None
+    v = _value(digits)
+    check, v = v % 16384, v // 16384
+    if v % _CHECK != check:
+        return None
+    count = v & (2 ** _TOPIC_BITS - 1)
+    v >>= _TOPIC_BITS
+    beats = v & 3
+    v >>= 2
+    xp = v & (2 ** _XP_BITS - 1)
+    v >>= _XP_BITS
+    levels = []
+    for _ in range(count):
+        levels.insert(0, v & 7)
+        v >>= 3
+    gems = []
+    for _ in range(len(curriculum.REGION_KEYS)):
+        gems.insert(0, bool(v & 1))
+        v >>= 1
+    if v or not count or any(not 1 <= x <= 5 for x in levels):
+        return None
+    return grade, gems, levels, xp, beats
+
+
+def _decode_v1(text: str):
+    content = curriculum.grade("4")
+    v = _value(text)
+    check, v = v % 16384, v // 16384
+    if v % _CHECK != check:
+        return None
+    beats = v & 3
+    v >>= 2
+    xp = v & (2 ** _XP_BITS - 1)
+    v >>= _XP_BITS
+    levels = []
+    for _ in content.topics:
+        levels.insert(0, v & 7)
+        v >>= 3
+    gems = []
+    for _ in content.regions:
+        gems.insert(0, bool(v & 1))
+        v >>= 1
+    if v or any(not 1 <= x <= 5 for x in levels):
+        return None
+    return "4", gems, levels, xp, beats
 
 # Rank thresholds for a full 4th-grade game. A grade with fewer encounters
 # (see config.ENCOUNTERS_BY_GRADE) scales them down, so every grade can reach
@@ -582,54 +684,29 @@ class Game:
             return
         self._after_region()
 
-    # --- hero code: gems, skill levels, XP and story pages in twelve characters ---
+    # --- hero code: grade, gems, skill levels, XP and story pages ---------
     def to_code(self) -> str:
-        v = 0
-        for r in self.content.regions:
-            v = (v << 1) | (r["key"] in self.done or r["key"] in self._other_done)
-        for t in self.content.topics:
-            tier = self.tiers.get(t, self._other_tiers.get(t, config.START_TIER))
-            v = (v << 3) | max(1, min(5, tier))
-        v = (v << _XP_BITS) | min(self.xp, 2 ** _XP_BITS - 1)
-        v = (v << 2) | min(self.beats_seen, 3)
-        v = v * 16384 + v % _CHECK
-        out = ""
-        for _ in range(_CODE_LEN):
-            out = _B32[v & 31] + out
-            v >>= 5
-        return "-".join(out[i:i + 4] for i in range(0, _CODE_LEN, 4))
+        topics = list(self.content.topics)
+        gems = [r["key"] in self.done or r["key"] in self._other_done
+                for r in self.content.regions]
+        levels = [self.tiers.get(t, self._other_tiers.get(t, config.START_TIER))
+                  for t in topics]
+        return encode_code(self.grade, gems, levels, self.xp, self.beats_seen)
 
     @classmethod
-    def from_code(cls, name: str, code: str, seed: int | None = None, grade: str = "4"):
+    def from_code(cls, name: str, code: str, seed: int | None = None):
         """Rebuild a hero from a code. Returns None if the code is not valid."""
+        decoded = decode_code(code)
+        if decoded is None:
+            return None
+        grade, gems, levels, xp, beats = decoded
         content = curriculum.grade(grade)
-        text = (code or "").upper().replace("O", "0").replace("I", "1").replace("L", "1")
-        text = "".join(ch for ch in text if ch.isalnum())
-        if len(text) != _CODE_LEN or any(ch not in _B32 for ch in text):
-            return None
-        v = 0
-        for ch in text:
-            v = v * 32 + _B32.index(ch)
-        check, v = v % 16384, v // 16384
-        if v % _CHECK != check:
-            return None
-        beats = v & 3
-        v >>= 2
-        xp = v & (2 ** _XP_BITS - 1)
-        v >>= _XP_BITS
-        tiers = {}
-        for t in reversed(list(content.topics)):
-            tiers[t] = v & 7
-            v >>= 3
-        if any(not 1 <= x <= 5 for x in tiers.values()):
-            return None
-        done = set()
-        for r in reversed(content.regions):
-            if v & 1:
-                done.add(r["key"])
-            v >>= 1
-        if v:
-            return None
+        topics = list(content.topics)
+        # A topic added to the end of the file after the code was made starts
+        # at the usual level; extra levels for topics since removed are dropped.
+        levels = (levels + [config.START_TIER] * len(topics))[:len(topics)]
+        tiers = dict(zip(topics, levels))
+        done = {r["key"] for r, won in zip(content.regions, gems) if won}
         g = cls(name, grade, seed)
         g.xp = xp
         g.tiers = {t: _clamp(tiers[t]) for t in g.topics}

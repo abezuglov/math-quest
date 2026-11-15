@@ -112,3 +112,75 @@ def test_config_has_grade_settings_and_no_topic_switches():
     assert config.GRADES == ["K", "1", "2", "3", "4", "5"]
     assert config.DEFAULT_GRADE is None
     assert not hasattr(config, "TOPICS")
+
+
+# --------------------------------------------------------------------------
+# Hero codes v2
+# --------------------------------------------------------------------------
+from engine import decode_code, encode_code  # noqa: E402
+
+# Made by the old 12-character encoder (before grades): village and mines won,
+# 345 XP, levels addition 3, fractions 1, two_step 5, the rest 2, one story page.
+OLD_CODE = "R6J8-N80N-JRDE"
+
+
+def test_old_12_character_codes_still_load_as_4th_grade():
+    g = Game.from_code("Zed", OLD_CODE)
+    assert g is not None and g.grade == "4"
+    assert g.done == {"village", "mines"} and g.xp == 345 and g.beats_seen == 1
+    assert g.tiers == {"addition": 3, "subtraction": 2, "multiplication": 2,
+                       "division": 2, "fractions": 1, "area_perimeter": 2, "two_step": 5}
+    assert Game.from_code("Zed", OLD_CODE.lower().replace("-", "")).xp == 345
+    # once saved again it becomes a v2 code with the grade in front
+    assert g.to_code().startswith("4") and len(g.to_code()) == 19
+    assert Game.from_code("Zed", g.to_code()).tiers == g.tiers
+
+
+@pytest.mark.parametrize("grade", GRADES)
+def test_codes_round_trip_in_every_grade(grade):
+    g = Game("Fay", grade, seed=4)
+    rng = random.Random(int(grade) if grade != "K" else 0)
+    for t in g.topics:
+        g.tiers[t] = rng.randint(1, 5)
+    g.done = {r["key"] for r in g.regions[:3]}
+    g.xp = 12345
+    g.beats_seen = 2
+    code = g.to_code()
+    assert code[0] == grade and len(code.replace("-", "")) % 4 == 0
+    assert len(code.replace("-", "")) >= 16
+    assert all(ch in "0123456789ABCDEFGHJKMNPQRSTVWXYZ" for ch in code.replace("-", "")[1:])
+    h = Game.from_code("Fay", code.lower().replace("-", " "))
+    assert h.grade == grade and h.tiers == g.tiers and h.done == g.done
+    assert h.xp == 12345 and h.beats_seen == 2
+    bad = code[:-1] + ("0" if code[-1] != "0" else "1")
+    assert Game.from_code("x", bad) is None
+
+
+def test_adding_a_topic_at_the_end_keeps_old_codes_valid():
+    topics = list(curriculum.grade("4").topics)
+    gems = [True, False, True, False, False, False]
+    short = encode_code("4", gems, [5, 4, 3, 2, 1], 999, 3)     # only 5 of the 7 topics
+    assert decode_code(short) == ("4", gems, [5, 4, 3, 2, 1], 999, 3)
+    g = Game.from_code("Gil", short)
+    assert [g.tiers[t] for t in topics] == [5, 4, 3, 2, 1, config.START_TIER, config.START_TIER]
+    assert g.done == {"village", "docks"} and g.xp == 999
+    # more levels than topics (a topic was deleted, against the rules): the extras are dropped
+    long = encode_code("4", gems, [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2], 5, 0)
+    assert [Game.from_code("Gil", long).tiers[t] for t in topics] == [1, 2, 3, 4, 5, 1, 2]
+    assert len(long.replace("-", "")) == 20 and len(short.replace("-", "")) == 16
+
+
+def test_bad_codes_are_rejected_not_crashed():
+    for junk in ("", "4", "9ABC-DEFG-HJKM-NPQR", "4ABC-DEFG-HJKM-NPQ", "4UUU-UUUU-UUUU-UUUU",
+                 "4" * 40, "ABCD-1234", None):
+        assert Game.from_code("x", junk) is None
+    rng = random.Random(3)
+    alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+    for _ in range(300):
+        junk = rng.choice(GRADES) + "".join(rng.choice(alphabet) for _ in range(15))
+        made = Game.from_code("x", junk)
+        assert made is None or made.to_code().replace("-", "") == junk
+    with pytest.raises(ValueError):
+        encode_code("4", [True] * 6, [], 0, 0)
+    with pytest.raises(ValueError):
+        encode_code("4", [True] * 6, [1] * 32, 0, 0)

@@ -6,6 +6,7 @@ import pytest
 pytest.importorskip("streamlit")
 from streamlit.testing.v1 import AppTest  # noqa: E402
 
+from engine import Game  # noqa: E402
 from questions import fmt  # noqa: E402
 
 APP = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.py")
@@ -36,8 +37,17 @@ def set_task(at, g, good):
         at.radio(key=key).set_value(d["answer"] if good else (d["answer"] + 1) % n)
 
 
+def start(grade="4"):
+    """The title screen for a grade (as from a teacher's ?grade= link)."""
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.query_params["grade"] = grade
+    at.run()
+    assert not at.exception, at.exception
+    return at
+
+
 def test_full_playthrough_through_the_ui():
-    at = AppTest.from_file(APP, default_timeout=30).run()
+    at = start()
     assert not at.exception
     at.text_input[0].set_value("Testy <b>")
     click(at, lambda b: "Begin" in b.label)
@@ -96,7 +106,7 @@ def test_full_playthrough_through_the_ui():
 
 
 def test_hero_comes_back_from_the_address_or_a_typed_code():
-    at = AppTest.from_file(APP, default_timeout=30).run()
+    at = start()
     at.text_input[0].set_value("Zed")
     click(at, lambda b: "Begin" in b.label)
     click(at, lambda b: b.key == "q_0")
@@ -114,7 +124,7 @@ def test_hero_comes_back_from_the_address_or_a_typed_code():
     h = again.session_state["game"]
     assert h.name == "Zed" and h.xp == 345 and h.done == {"village", "mines"}
 
-    typed = AppTest.from_file(APP, default_timeout=30).run()
+    typed = AppTest.from_file(APP, default_timeout=30).run()   # no grade: the code has it
     typed.text_input(key="resume_name").set_value("Zed")
     typed.text_input(key="resume_code").set_value("nonsense")
     click(typed, lambda b: "Continue my quest" in b.label)
@@ -127,3 +137,61 @@ def test_hero_comes_back_from_the_address_or_a_typed_code():
     broken.query_params["hero"] = "XXXX-XXXX-XXXX"
     broken.run()
     assert not broken.exception and "game" not in broken.session_state
+
+
+def test_grade_is_picked_on_the_title_screen_or_comes_from_the_link():
+    import curriculum
+    grades = [c for c in curriculum.load_all()]
+    keys = {f"grade_{c}" for c in grades}
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not at.exception
+    # no grade in the link: big buttons first, no name box yet
+    assert {b.key for b in at.button} >= keys
+    assert all(t.form_id != "start" for t in at.text_input)
+    click(at, lambda b: b.key == f"grade_{grades[-1]}")
+    assert not any(b.key in keys for b in at.button)
+    at.text_input[0].set_value("Pia")
+    click(at, lambda b: "Begin" in b.label)
+    g = at.session_state["game"]
+    assert g.grade == grades[-1] and g.phase == "map"
+    assert at.query_params["grade"] in (g.grade, [g.grade])
+    hud = next(m.value for m in at.markdown if "class=\"hud\"" in m.value)
+    assert curriculum.grade(g.grade).name in hud
+
+    # a teacher's link with the grade skips the buttons
+    linked = AppTest.from_file(APP, default_timeout=30)
+    linked.query_params["grade"] = grades[0].lower()
+    linked.run()
+    assert not linked.exception
+    assert not any(b.key in keys for b in linked.button)
+    linked.text_input[0].set_value("Quin")
+    click(linked, lambda b: "Begin" in b.label)
+    assert linked.session_state["game"].grade == grades[0]
+
+    # an unknown grade in the link is ignored
+    odd = AppTest.from_file(APP, default_timeout=30)
+    odd.query_params["grade"] = "9"
+    odd.run()
+    assert not odd.exception and {b.key for b in odd.button} >= keys
+
+
+def test_change_grade_in_the_sidebar_starts_a_new_hero_and_keeps_the_old_code():
+    import curriculum
+    grades = [c for c in curriculum.load_all()]
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.query_params["grade"] = grades[0]
+    at.run()
+    at.text_input[0].set_value("Rae")
+    click(at, lambda b: "Begin" in b.label)
+    g = at.session_state["game"]
+    g.xp = 250
+    old_code = g.to_code()
+    target = grades[-1]
+    at.selectbox(key="side_grade").set_value(target).run()
+    at.checkbox(key="side_grade_sure").check().run()
+    click(at, lambda b: b.label == "Change grade")
+    assert not at.exception
+    h = at.session_state["game"]
+    assert h is not g and h.grade == target and h.xp == 0 and h.name == "Rae"
+    assert at.query_params["grade"] in (target, [target])
+    assert Game.from_code("Rae", old_code).xp == 250

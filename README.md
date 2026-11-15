@@ -22,9 +22,27 @@ The game opens in the browser at http://localhost:8501.
 3. Click **Create app**, pick the repository, and set the main file to `app.py`.
 4. Click **Deploy**. Share the link it gives you with the class.
 
+### One link per grade
+
+The game covers Kindergarten to 5th grade. Add `?grade=` to the app's address
+to send a class straight to its grade (no grade buttons):
+
+| Grade | Link to share |
+|---|---|
+| Kindergarten | `https://<your-app>.streamlit.app/?grade=K` |
+| 1st grade | `https://<your-app>.streamlit.app/?grade=1` |
+| 2nd grade | `https://<your-app>.streamlit.app/?grade=2` |
+| 3rd grade | `https://<your-app>.streamlit.app/?grade=3` |
+| 4th grade | `https://<your-app>.streamlit.app/?grade=4` |
+| 5th grade | `https://<your-app>.streamlit.app/?grade=5` |
+
+Without `?grade=`, the first screen asks the child to pick a grade. A hero
+code remembers its grade, and the side panel has **Change grade** (starts a
+new hero in the new grade; the old code stays valid).
+
 Each child's browser is its own separate game. There are no accounts. Progress
-is kept in a short **hero code** (like `2GJ9-4J0D-4C7K`) that holds the gems won,
-the level of every skill and the XP:
+is kept in a short **hero code** (like `400R-6J8N-80NJ-KXFQ`) that holds the
+grade, the gems won, the level of every skill and the XP:
 
 - The code is shown on the map and in the side panel. The child writes it down
   and types it on the first screen next time.

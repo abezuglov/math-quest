@@ -8,6 +8,7 @@ import html
 import streamlit as st
 
 import config
+import curriculum
 import pictures
 import story
 from engine import TRIAL_PASS, TRIAL_QUESTIONS, Game
@@ -84,17 +85,43 @@ def new_game(game):
 
 
 def end_game():
+    """Back to the title screen. The grade in the link (a teacher's ?grade=
+    link) is kept, so the next child does not have to pick it again."""
     st.session_state.pop("celebrated", None)
     st.session_state.pop("game", None)
+    st.session_state.pop("grade_pick", None)
+    grade = st.query_params.get("grade")
     st.query_params.clear()
+    if grade:
+        st.query_params["grade"] = grade
 
 
 def sync_url(g):
     """Keep the hero code in the page address, so a refresh does not lose the hero."""
     code = g.to_code()
-    if st.query_params.get("hero") != code or st.query_params.get("name") != g.name:
+    if (st.query_params.get("hero") != code or st.query_params.get("name") != g.name
+            or st.query_params.get("grade") != g.grade):
         st.query_params["hero"] = code
         st.query_params["name"] = g.name
+        st.query_params["grade"] = g.grade
+
+
+def grades_offered():
+    """The grades a child may pick: listed in config.py AND having a content file."""
+    return [c for c in config.GRADES if c in curriculum.load_all()]
+
+
+def grade_from_link():
+    """The grade in the page address or in config.py, if valid."""
+    for code in (st.query_params.get("grade"), config.DEFAULT_GRADE):
+        code = str(code).strip().upper() if code else ""
+        if code in grades_offered():
+            return code
+    return None
+
+
+def grade_name(code):
+    return curriculum.grade(code).name
 
 
 # ---------------------------------------------------------------------------
@@ -102,16 +129,31 @@ def title_screen():
     st.title("🐉 " + story.TITLE)
     picture(pictures.scene("peak"), wide=True)
     st.markdown(story.PROLOGUE)
-    with st.form("start"):
-        name = st.text_input("What is your hero's name?", max_chars=20)
-        go = st.form_submit_button("Begin the quest ⚔️", type="primary")
-    if go:
-        new_game(Game(name.strip() or "Hero", config.DEFAULT_GRADE or "4"))
-        st.rerun()
+    fixed = grade_from_link()
+    grade = fixed or st.session_state.get("grade_pick")
+    if grade is None:
+        st.markdown("### 🎓 Which grade are you in?")
+        cols = st.columns(3)
+        for i, code in enumerate(grades_offered()):
+            if cols[i % 3].button(grade_name(code), key=f"grade_{code}", type="primary",
+                                  width="stretch"):
+                st.session_state.grade_pick = code
+                st.rerun()
+    else:
+        st.markdown(f"🎓 **{grade_name(grade)}**")
+        with st.form("start"):
+            name = st.text_input("What is your hero's name?", max_chars=20)
+            go = st.form_submit_button("Begin the quest ⚔️", type="primary")
+        if go:
+            new_game(Game(name.strip() or "Hero", grade))
+            st.rerun()
+        if not fixed and st.button("Pick another grade", key="grade_again"):
+            st.session_state.pop("grade_pick", None)
+            st.rerun()
     with st.expander("🔑 I played before and have a hero code"):
         with st.form("resume"):
             old_name = st.text_input("Hero's name", max_chars=20, key="resume_name")
-            code = st.text_input("Hero code (like ABCD-1234-EFGH)", max_chars=20,
+            code = st.text_input("Hero code (like 4ABC-DEFG-HJKM-NPQR)", max_chars=40,
                                  key="resume_code")
             back = st.form_submit_button("Continue my quest 🗺️")
         if back:
@@ -137,7 +179,7 @@ def title_screen():
             "- Coming back to a place whose gem you already have is practice: it "
             "pays half XP.\n"
             "- Get three in a row and the riddles get harder and are worth **more XP**.\n"
-            "- Type fractions like `3/4`.\n"
+            "- Type fractions like `3/4` and decimals like `0.75`.\n"
             "- Write down your **hero code** to carry on another day. Reloading "
             "the page takes you back to the map.")
 
@@ -163,6 +205,20 @@ def sidebar(g):
         st.markdown("### 🔑 Hero code")
         st.markdown(f"<span class='code'>{g.to_code()}</span>", unsafe_allow_html=True)
         st.caption("Write it down to carry on another day.")
+        with st.expander("🎓 Change grade"):
+            st.caption(f"Now playing **{grade_name(g.grade)}**. Changing the grade starts "
+                       "a NEW hero in that grade. This hero's code above stays valid: "
+                       "write it down to come back to it.")
+            pick = st.selectbox("New grade", grades_offered(), index=None,
+                                format_func=grade_name, key="side_grade",
+                                placeholder="Pick a grade")
+            sure = st.checkbox("Yes, start a new hero in that grade", key="side_grade_sure")
+            if st.button("Change grade", disabled=not (sure and pick)):
+                name = g.name
+                st.session_state.pop("side_grade", None)
+                st.session_state.pop("side_grade_sure", None)
+                new_game(Game(name, pick))
+                st.rerun()
         with st.expander("Teacher"):
             st.caption("Starts a brand new game for a new player. "
                        "This hero's gems and XP are erased.")
@@ -179,6 +235,7 @@ def hud(g):
     st.markdown(
         f"""<div class="hud">
         <span class="who">🧒 {esc(g.name)}</span>
+        <span>🎓 {esc(grade_name(g.grade))}</span>
         <span>🎖️ {esc(g.rank)}</span>
         <span>✨ {g.xp} XP</span>
         <span>💎 {len(g.done)}/{len(g.regions)}</span>
