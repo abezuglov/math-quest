@@ -410,8 +410,9 @@ def test_an_unread_story_page_and_switched_off_regions_survive_the_code(monkeypa
     full = Game("Rae", seed=18)
     play(full, right)
     code = full.to_code()
-    monkeypatch.setitem(config.TOPICS, "fractions", False)
-    monkeypatch.setitem(config.TOPICS, "division", False)
+    import curriculum
+    monkeypatch.setattr(curriculum.grade("4").topics["fractions"], "enabled", False)
+    monkeypatch.setattr(curriculum.grade("4").topics["division"], "enabled", False)
     small = Game.from_code("Rae", code)
     assert len(small.regions) == 4 and small.all_done
     assert small.to_code() == code             # nothing is lost while topics are off

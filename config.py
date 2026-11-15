@@ -3,17 +3,11 @@
 Change the values here, save, and restart the app.
 """
 
-# --- Which math topics are in the game (True = on, False = off) -------------
-# A region whose topics are all off is skipped.
-TOPICS = {
-    "addition": True,
-    "subtraction": True,
-    "multiplication": True,
-    "division": True,
-    "fractions": True,
-    "area_perimeter": True,
-    "two_step": True,
-}
+# --- Grades -----------------------------------------------------------------
+# The math content lives in curriculum/grade_*.toml (see curriculum/FORMAT.md).
+# To switch a topic off, set `enabled = false` on it in the grade file.
+GRADES = ["K", "1", "2", "3", "4", "5"]   # grades offered on the title screen
+DEFAULT_GRADE = None   # e.g. "3" to skip the grade buttons; None = ask (or ?grade= in the link)
 
 # --- Difficulty tiers (1 = easiest, 5 = hardest) ----------------------------
 # Every topic has its own tier per child. Clamp the range for the whole class here.

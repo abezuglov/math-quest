@@ -10,8 +10,7 @@ import streamlit as st
 import config
 import pictures
 import story
-from engine import TRIAL_PASS, TRIAL_QUESTIONS, Game, rank_for
-from questions import TOPIC_LABELS
+from engine import TRIAL_PASS, TRIAL_QUESTIONS, Game
 
 st.set_page_config(page_title=story.TITLE, page_icon="🐉", layout="centered")
 
@@ -107,7 +106,7 @@ def title_screen():
         name = st.text_input("What is your hero's name?", max_chars=20)
         go = st.form_submit_button("Begin the quest ⚔️", type="primary")
     if go:
-        new_game(Game(name.strip() or "Hero"))
+        new_game(Game(name.strip() or "Hero", config.DEFAULT_GRADE or "4"))
         st.rerun()
     with st.expander("🔑 I played before and have a hero code"):
         with st.form("resume"):
@@ -158,7 +157,7 @@ def sidebar(g):
                       help="Leave this place. You keep your XP.")
         st.markdown("### ⭐ Skill levels")
         for t in g.topics:
-            st.markdown(f"{TOPIC_LABELS[t]}  \n{'⭐' * g.tiers[t]}{'☆' * (5 - g.tiers[t])}")
+            st.markdown(f"{g.label(t)}  \n{'⭐' * g.tiers[t]}{'☆' * (5 - g.tiers[t])}")
         if g.streak >= 3:
             st.markdown(f"🔥 Streak: **{g.streak}** in a row!")
         st.markdown("### 🔑 Hero code")
@@ -180,7 +179,7 @@ def hud(g):
     st.markdown(
         f"""<div class="hud">
         <span class="who">🧒 {esc(g.name)}</span>
-        <span>🎖️ {esc(rank_for(g.xp))}</span>
+        <span>🎖️ {esc(g.rank)}</span>
         <span>✨ {g.xp} XP</span>
         <span>💎 {len(g.done)}/{len(g.regions)}</span>
         <span>❤️ {g.hp}/{config.MAX_HP}</span>
@@ -224,7 +223,7 @@ def map_screen(g):
         st.markdown("**Where to next, hero?**")
     for i, r in enumerate(g.regions):
         status = g.status(i)
-        skills = ", ".join(TOPIC_LABELS[t] for t in r["topics"] if t in g.topics)
+        skills = ", ".join(g.label(t) for t in r["topics"] if t in g.topics)
         if r.get("mix"):
             skills = f"{skills}, then everything mixed" if skills else "Everything mixed"
         with st.container(border=True):
@@ -268,9 +267,9 @@ def question_screen(g):
     if trial:
         st.caption(f"{r['emoji']} {r['name']}  ·  ⚡ Speed trial: riddle {enc['asked']} "
                    f"of {enc['total']}  ·  ✅ {enc['right']} right so far  ·  "
-                   f"{TOPIC_LABELS[q.topic]}, level {q.tier}")
+                   f"{g.label(q.topic)}, level {q.tier}")
     else:
-        st.caption(f"{r['emoji']} {r['name']}  ·  {TOPIC_LABELS[q.topic]}  ·  "
+        st.caption(f"{r['emoji']} {r['name']}  ·  {g.label(q.topic)}  ·  "
                    f"Level {q.tier} riddle")
     foe = enc["kind"] in ("fight", "boss")
     if trial:
@@ -304,8 +303,8 @@ def question_screen(g):
             col.button(choice, key=f"c_{g.qcount}_{enc['attempt']}_{choice}",
                        width="stretch", on_click=g.submit, args=(choice,))
     else:
-        label = ("Your answer (type a fraction like 3/4)" if q.kind == "fraction"
-                 else "Your answer")
+        label = {"fraction": "Your answer (type a fraction like 3/4)",
+                 "decimal": "Your answer (type a decimal like 0.75)"}.get(q.kind, "Your answer")
         with st.form(f"f_{g.qcount}_{enc['attempt']}", clear_on_submit=True):
             raw = st.text_input(label, key=f"a_{g.qcount}_{enc['attempt']}",
                                 max_chars=20)
@@ -363,7 +362,7 @@ def task_controls(g):
 def task_screen(g):
     enc, task = g.enc, g.task
     spec, r = enc["spec"], g.region
-    st.caption(f"{r['emoji']} {r['name']}  ·  {TOPIC_LABELS[task.topic]}  ·  "
+    st.caption(f"{r['emoji']} {r['name']}  ·  {g.label(task.topic)}  ·  "
                f"🖐️ Hands-on task, level {task.tier}")
     npc_box(spec, spec["intro"])
     fb = g.feedback
@@ -429,7 +428,7 @@ def feedback_screen(g):
         st.caption(f"⚡ Speed trial: {enc['right']} right out of {enc['asked']} so far "
                    f"({enc['total']} riddles in all).")
 
-    topic = TOPIC_LABELS[fb.topic]
+    topic = g.label(fb.topic)
     if fb.tier_change > 0:
         st.info(f"📈 You're on a roll! {topic} riddles get tougher now, "
                 f"and they are worth more XP.")
@@ -512,7 +511,7 @@ def victory_screen(g):
     rows = ""
     for row in g.summary():
         acc = f"{row['accuracy']}%" if row["accuracy"] is not None else "–"
-        rows += (f"<tr><td style='text-align:left'>{TOPIC_LABELS[row['topic']]}</td>"
+        rows += (f"<tr><td style='text-align:left'>{g.label(row['topic'])}</td>"
                  f"<td>{row['right']} / {row['asked']}</td><td>{acc}</td>"
                  f"<td>{'⭐' * row['tier']}</td></tr>")
     right = sum(s[0] for s in g.stats.values())
@@ -522,7 +521,7 @@ def victory_screen(g):
         <div>📜 Kingdom of Arithmos · Certificate of Heroism</div>
         <h2>{esc(g.name)}</h2>
         <div>returned the stolen numbers and earned the rank of</div>
-        <div class="big">🎖️ {esc(rank_for(g.xp))}</div>
+        <div class="big">🎖️ {esc(g.rank)}</div>
         <div>✨ {g.xp} XP · 💎 {len(g.done)} gems · today: {right} of {asked} first
              tries right · best streak {g.best_streak} · {datetime.date.today():%B %d, %Y}</div>
         <table style="margin:14px auto 0; border-collapse:collapse;">
@@ -558,10 +557,6 @@ SCREENS = {
 
 
 def main():
-    if not any(config.TOPICS.values()):
-        st.error("No math topics are turned on. Teacher: set at least one topic "
-                 "to True in config.py.")
-        st.stop()
     if "game" not in st.session_state and st.query_params.get("hero"):
         # The page was refreshed or bookmarked: bring the hero back from the address.
         name = (st.query_params.get("name") or "Hero").strip()[:20] or "Hero"

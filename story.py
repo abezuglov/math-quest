@@ -132,7 +132,7 @@ REGIONS = [
              "intro": "So many carts, so many crystals. Counting one by one takes forever!",
              "win": "Quick as a pickaxe! The carts are rolling again."},
             {"kind": "riddle", "name": "Lampkeeper Lux", "emoji": "🏮",
-             "intro": "I need to know how many lamps to light. Help me multiply.",
+             "intro": "I need to know how many lamps to light. Help me work it out.",
              "win": "The tunnel glows. Onward, hero!"},
             {"kind": "fight", "name": "Times Bat", "emoji": "🦇",
              "intro": "Screeee! I flap in groups. How many of us are there? You'll never know!",
@@ -166,10 +166,10 @@ REGIONS = [
                   "ever got cheated, back then.'",
         "encounters": [
             {"kind": "riddle", "name": "Captain Quotia", "emoji": "🧑‍✈️",
-             "intro": "My crew wants equal shares, and I've lost my numbers. Help me, sailor!",
+             "intro": "My crew is arguing over the cargo, and I've lost my numbers. Help me, sailor!",
              "win": "Fair and square! You'd make a fine first mate."},
             {"kind": "riddle", "name": "Net-mender Ned", "emoji": "🪢",
-             "intro": "I've got fish to split between the boats. How many each?",
+             "intro": "I've got fish for the boats and no numbers to count them. Can you help?",
              "win": "Every boat is happy. Thank you kindly!"},
             {"kind": "fight", "name": "Splitter Crab", "emoji": "🦀",
              "intro": "Snip snap! I split things UNFAIRLY. Stop me if you can!",
@@ -178,7 +178,7 @@ REGIONS = [
              "intro": "Crates everywhere! Load my boats fairly before the tide goes out.",
              "win": "Every boat sits level in the water. Cast off!"},
             {"kind": "riddle", "name": "Cook Remy", "emoji": "🍲",
-             "intro": "A good cook wastes nothing. Tell me about the shares and the leftovers.",
+             "intro": "A good cook wastes nothing. Help me with this kitchen sum.",
              "win": "Perfect portions! Have some stew."},
             {"kind": "fight", "name": "Remainder Eel", "emoji": "🐍",
              "intro": "Ssso many leftovers! I eat them all. Even socks.",
@@ -204,10 +204,10 @@ REGIONS = [
                   "equal piece. Those were good days, little hero.'",
         "encounters": [
             {"kind": "riddle", "name": "Pie-maker Penny", "emoji": "🥧",
-             "intro": "I can't slice my pies fairly anymore! Help me with the pieces.",
+             "intro": "I can't bake a thing without numbers! Help me with this one.",
              "win": "A perfect slice! Take one with you."},
             {"kind": "riddle", "name": "The Half-Moon Owl", "emoji": "🦉",
-             "intro": "Whooo knows their fractions? Show me, little hero.",
+             "intro": "Whooo knows the answer? Show me, little hero.",
              "win": "Wise indeed. The path ahead is clear."},
             {"kind": "fight", "name": "Sliver Spider", "emoji": "🕷️",
              "intro": "I cut my web into tiny, tiny parts. You'll get tangled in them!",
@@ -287,7 +287,7 @@ REGIONS = [
                  "school on Monday. She can already count to thirteen.",
         "encounters": [
             {"kind": "riddle", "name": "Hermit Hale", "emoji": "🧙",
-             "intro": "Up here, one step is never enough. Take two. Think slowly.",
+             "intro": "Up here the air is thin. Think slowly, hero, and you will get there.",
              "win": "Step by step. That is how mountains are climbed."},
             {"kind": "riddle", "name": "Gruff the Goat Guide", "emoji": "🐐",
              "intro": "Baaa! I'll lead you up the cliff if you can solve this.",
@@ -315,3 +315,36 @@ REGIONS = [
         ],
     },
 ]
+
+REGION_BY_KEY = {r["key"]: r for r in REGIONS}
+
+# The 4th-grade lines above that name a topic, restored by grade_4.toml's
+# [[region.encounter]] overrides.
+ENCOUNTER_FIELDS = ("name", "emoji", "intro", "win")
+
+
+def build_region(spec: dict) -> dict:
+    """Merge a grade file's [[region]] with the shared story for its map spot.
+
+    The grade file gives the name, gem, topics and task, and may override the
+    intro/outro/memory text and single encounters (by slot). Encounter
+    characters and lines come from REGIONS above. A region without a task has
+    no task encounter.
+    """
+    base = REGION_BY_KEY[spec["key"]]
+    region = dict(base)
+    region.update({k: v for k, v in spec.items() if k != "encounter" and v is not None})
+    encounters = [dict(e) for e in base["encounters"]]
+    for ov in spec.get("encounter", []):
+        slot = ov.get("slot", -1)
+        if 0 <= slot < len(encounters):
+            encounters[slot].update({k: ov[k] for k in ENCOUNTER_FIELDS if ov.get(k)})
+    kept = []
+    for e in encounters:
+        if e["kind"] == "task":
+            if not spec.get("task"):
+                continue
+            e["task"] = spec["task"]
+        kept.append(e)
+    region["encounters"] = kept
+    return region

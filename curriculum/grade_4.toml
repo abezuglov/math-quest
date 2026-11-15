@@ -27,6 +27,9 @@ gem    = "Gem of Times"
 topics = ["multiplication"]
 task   = "multiples"
 task_topic = "multiplication"
+  [[region.encounter]]
+  slot  = 1
+  intro = "I need to know how many lamps to light. Help me multiply."
 
 [[region]]
 key    = "docks"
@@ -35,6 +38,15 @@ gem    = "Gem of Shares"
 topics = ["division"]
 task   = "share"
 task_topic = "division"
+  [[region.encounter]]
+  slot  = 0
+  intro = "My crew wants equal shares, and I've lost my numbers. Help me, sailor!"
+  [[region.encounter]]
+  slot  = 1
+  intro = "I've got fish to split between the boats. How many each?"
+  [[region.encounter]]
+  slot  = 4
+  intro = "A good cook wastes nothing. Tell me about the shares and the leftovers."
 
 [[region]]
 key    = "forest"
@@ -43,6 +55,12 @@ gem    = "Gem of Parts"
 topics = ["fractions"]
 task   = "shade"
 task_topic = "fractions"
+  [[region.encounter]]
+  slot  = 0
+  intro = "I can't slice my pies fairly anymore! Help me with the pieces."
+  [[region.encounter]]
+  slot  = 1
+  intro = "Whooo knows their fractions? Show me, little hero."
 
 [[region]]
 key    = "castle"
@@ -61,6 +79,9 @@ mix    = true
 final  = true
 task   = "ledger"
 task_topic = "two_step"
+  [[region.encounter]]
+  slot  = 0
+  intro = "Up here, one step is never enough. Take two. Think slowly."
 
 # ---------------------------------------------------------------------------
 # Topics. Label and tip come from questions.py when a generator is used.

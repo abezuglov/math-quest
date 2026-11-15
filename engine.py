@@ -8,10 +8,11 @@ import random
 from dataclasses import dataclass
 
 import config
+import curriculum
 import story
 import tasks
-from questions import (ALL_TOPICS, TOPIC_TIPS, fmt, generate, is_correct,
-                       parse_answer, severity)
+from curriculum import show_answer
+from questions import is_correct, parse_answer, severity
 
 # Settings are kept inside safe limits, so a typo in config.py cannot make the
 # game unwinnable.
@@ -26,6 +27,9 @@ _CODE_LEN = 12
 _XP_BITS = 17
 _CHECK = 16381             # prime; the check value fits in 14 bits
 
+# Rank thresholds for a full 4th-grade game. A grade with fewer encounters
+# (see config.ENCOUNTERS_BY_GRADE) scales them down, so every grade can reach
+# the top rank.
 RANKS = [
     (0, "Apprentice"),
     (300, "Squire"),
@@ -36,12 +40,27 @@ RANKS = [
 ]
 
 
-def rank_for(xp: int) -> str:
+def rank_for(xp: int, scale: float = 1.0) -> str:
     name = RANKS[0][1]
     for need, title in RANKS:
-        if xp >= need:
+        if xp >= round(need * scale / 10) * 10:
             name = title
     return name
+
+
+def _encounter_weight(regions) -> int:
+    """Roughly how many right answers a perfect run of these regions takes."""
+    hits = {"riddle": 1, "fight": config.MONSTER_HITS, "boss": config.BOSS_HITS,
+            "task": TASK_XP_FACTOR}
+    total = 0
+    for r in regions:
+        for e in r["encounters"]:
+            total += (config.FINAL_BOSS_HITS if e.get("hp") == "final"
+                      else hits.get(e["kind"], 1))
+    return total
+
+
+_FULL_WEIGHT = _encounter_weight(story.REGIONS)
 
 
 def _clamp(tier: int) -> int:
@@ -73,14 +92,17 @@ class Feedback:
 
 
 class Game:
-    def __init__(self, name: str, seed: int | None = None):
+    def __init__(self, name: str, grade: str = "4", seed: int | None = None):
         self.name = name
+        self.grade = str(grade).upper()
+        self.content = curriculum.grade(self.grade)     # the grade's topics and regions
         self.rng = random.Random(seed)
         self.hp = config.MAX_HP
         self.xp = 0
-        self.topics = [t for t in ALL_TOPICS if config.TOPICS.get(t)]
+        self.topics = [t for t, topic in self.content.topics.items() if topic.enabled]
         if not self.topics:
-            raise ValueError("Turn on at least one topic in config.py")
+            raise ValueError(f"Every topic of grade {self.grade} is switched off "
+                             f"in {self.content.source}")
         self.tiers = {t: _clamp(config.START_TIER) for t in self.topics}
         self.best_tiers = dict(self.tiers)
         self.right_run = {t: 0 for t in self.topics}
@@ -89,8 +111,9 @@ class Game:
         self.streak = 0
         self.best_streak = 0
         self.defeats = 0
-        self.regions = [r for r in story.REGIONS
+        self.regions = [story.build_region(r) for r in self.content.regions
                         if r.get("mix") or any(t in self.topics for t in r["topics"])]
+        self.rank_scale = max(0.2, _encounter_weight(self.regions) / _FULL_WEIGHT)
         self.region_idx = 0
         self.enc_idx = 0
         # map | region_intro | question | task | feedback | region_done |
@@ -120,6 +143,19 @@ class Game:
         self._beat_at = [min(1, n), min(3, n), n][:len(story.BEATS)] if n else []
 
     # ------------------------------------------------------------------
+    def label(self, topic: str) -> str:
+        return self.content.topics[topic].label
+
+    def tip(self, topic: str) -> str:
+        return self.content.topics[topic].tip
+
+    def standard(self, topic: str) -> str:
+        return self.content.topics[topic].standard
+
+    @property
+    def rank(self) -> str:
+        return rank_for(self.xp, self.rank_scale)
+
     @property
     def region(self):
         return self.regions[self.region_idx]
@@ -173,11 +209,13 @@ class Game:
         spec = story.HEALER if healer else self.region["encounters"][self.enc_idx]
         kind = spec["kind"]
         if kind == "task":
-            topic = tasks.TASK_TOPIC[spec["task"]]
-            tier = _clamp(self.tiers.get(topic, config.START_TIER))
+            topic = self.region["task_topic"]
+            lo, hi = self.region.get("task_levels", (1, 5))
+            tier = max(lo, min(hi, _clamp(self.tiers.get(topic, config.START_TIER))))
             self.enc = {"spec": spec, "kind": kind, "attempt": 0, "asked": 1,
                         "potion": False, "monster_hp": 0, "monster_max": 0}
-            self.task = tasks.generate(spec["task"], tier, self.rng)
+            self.task = tasks.generate(spec["task"], tier, self.rng, topic=topic,
+                                       gentle=self.grade in ("K", "1"))
             self.question = None
             self.feedback = None
             self.input_error = ""
@@ -213,7 +251,7 @@ class Game:
         tier = _clamp(tier)
         old_text = self.question.text if self.question else None
         for _ in range(6):
-            q = generate(topic, tier, self.rng)
+            q = curriculum.generate(self.content.topics[topic], tier, self.rng)
             if q.text != old_text or q.kind == "choice":
                 break
         self.question = q
@@ -336,14 +374,15 @@ class Game:
         q, enc = self.question, self.enc
         if q.kind == "choice":
             if raw not in q.choices:
-                self.input_error = "Pick one of the two fractions."
+                self.input_error = "Pick one of the choices."
                 return False
             value = raw
         else:
             value = parse_answer(raw)
             if value is None:
-                self.input_error = ("I couldn't read that. Type a number like 42"
-                                    + (" or a fraction like 3/4." if q.kind == "fraction" else "."))
+                like = {"fraction": " or a fraction like 3/4",
+                        "decimal": " or a decimal like 0.75"}.get(q.kind, "")
+                self.input_error = f"I couldn't read that. Type a number like 42{like}."
                 return False
         self.input_error = ""
         correct = is_correct(q, value)
@@ -351,13 +390,13 @@ class Game:
             return self._submit_trial(q, value, correct)
         fight = enc["kind"] in ("fight", "boss")
         first = enc["attempt"] == 0
-        old_rank = rank_for(self.xp)
-        fb = Feedback(correct=correct, topic=q.topic, answer_text=fmt(q.answer),
-                      your_answer=fmt(value), explanation=q.explanation)
+        old_rank = self.rank
+        fb = Feedback(correct=correct, topic=q.topic, answer_text=show_answer(q),
+                      your_answer=show_answer(q, value), explanation=q.explanation)
         if fight or first:
             fb.tier_change, sage = self._record(q.topic, correct)
             if sage:
-                fb.sage_tip = TOPIC_TIPS[q.topic]
+                fb.sage_tip = self.tip(q.topic)
 
         if correct:
             xp = config.XP_BASE * q.tier
@@ -402,7 +441,7 @@ class Game:
         else:
             fb.encounter_over = True
 
-        new_rank = rank_for(self.xp)
+        new_rank = self.rank
         if new_rank != old_rank:
             fb.rank_up = new_rank
         self.feedback = fb
@@ -412,12 +451,12 @@ class Game:
 
     def _submit_trial(self, q, value, correct):
         enc = self.enc
-        old_rank = rank_for(self.xp)
-        fb = Feedback(correct=correct, topic=q.topic, answer_text=fmt(q.answer),
-                      your_answer=fmt(value), explanation=q.explanation)
+        old_rank = self.rank
+        fb = Feedback(correct=correct, topic=q.topic, answer_text=show_answer(q),
+                      your_answer=show_answer(q, value), explanation=q.explanation)
         fb.tier_change, sage = self._record(q.topic, correct)
         if sage:
-            fb.sage_tip = TOPIC_TIPS[q.topic]
+            fb.sage_tip = self.tip(q.topic)
         if correct:
             enc["right"] += 1
             fb.xp = config.XP_BASE * q.tier + (config.STREAK_BONUS if self.streak >= 3 else 0)
@@ -425,8 +464,8 @@ class Game:
                 fb.xp //= 2
             self.xp += fb.xp
         fb.encounter_over = enc["asked"] >= enc["total"]
-        if rank_for(self.xp) != old_rank:
-            fb.rank_up = rank_for(self.xp)
+        if self.rank != old_rank:
+            fb.rank_up = self.rank
         self.feedback = fb
         self.phase = "feedback"
         return True
@@ -438,14 +477,14 @@ class Game:
         task, enc = self.task, self.enc
         correct = tasks.check(task, value)
         first = enc["attempt"] == 0
-        old_rank = rank_for(self.xp)
+        old_rank = self.rank
         fb = Feedback(correct=correct, topic=task.topic, answer_text=task.solution,
                       your_answer=tasks.describe(task, value),
                       explanation=task.explanation, is_task=True)
         if first and task.topic in self.topics:
             fb.tier_change, sage = self._record(task.topic, correct)
             if sage:
-                fb.sage_tip = TOPIC_TIPS[task.topic]
+                fb.sage_tip = self.tip(task.topic)
         elif first:
             self.streak = self.streak + 1 if correct else 0
             self.best_streak = max(self.best_streak, self.streak)
@@ -466,8 +505,8 @@ class Game:
             enc["attempt"] = 1
         else:
             fb.encounter_over = True
-        if rank_for(self.xp) != old_rank:
-            fb.rank_up = rank_for(self.xp)
+        if self.rank != old_rank:
+            fb.rank_up = self.rank
         self.feedback = fb
         self.phase = "task" if fb.retry else "feedback"
         return True
@@ -546,9 +585,9 @@ class Game:
     # --- hero code: gems, skill levels, XP and story pages in twelve characters ---
     def to_code(self) -> str:
         v = 0
-        for r in story.REGIONS:
+        for r in self.content.regions:
             v = (v << 1) | (r["key"] in self.done or r["key"] in self._other_done)
-        for t in ALL_TOPICS:
+        for t in self.content.topics:
             tier = self.tiers.get(t, self._other_tiers.get(t, config.START_TIER))
             v = (v << 3) | max(1, min(5, tier))
         v = (v << _XP_BITS) | min(self.xp, 2 ** _XP_BITS - 1)
@@ -561,8 +600,9 @@ class Game:
         return "-".join(out[i:i + 4] for i in range(0, _CODE_LEN, 4))
 
     @classmethod
-    def from_code(cls, name: str, code: str, seed: int | None = None):
+    def from_code(cls, name: str, code: str, seed: int | None = None, grade: str = "4"):
         """Rebuild a hero from a code. Returns None if the code is not valid."""
+        content = curriculum.grade(grade)
         text = (code or "").upper().replace("O", "0").replace("I", "1").replace("L", "1")
         text = "".join(ch for ch in text if ch.isalnum())
         if len(text) != _CODE_LEN or any(ch not in _B32 for ch in text):
@@ -578,19 +618,19 @@ class Game:
         xp = v & (2 ** _XP_BITS - 1)
         v >>= _XP_BITS
         tiers = {}
-        for t in reversed(ALL_TOPICS):
+        for t in reversed(list(content.topics)):
             tiers[t] = v & 7
             v >>= 3
         if any(not 1 <= x <= 5 for x in tiers.values()):
             return None
         done = set()
-        for r in reversed(story.REGIONS):
+        for r in reversed(content.regions):
             if v & 1:
                 done.add(r["key"])
             v >>= 1
         if v:
             return None
-        g = cls(name, seed)
+        g = cls(name, grade, seed)
         g.xp = xp
         g.tiers = {t: _clamp(tiers[t]) for t in g.topics}
         g.best_tiers = dict(g.tiers)

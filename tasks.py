@@ -162,9 +162,18 @@ def _garden(t, rng):
          "need_per": t > 2})
 
 
-def _ledger_line(t, rng):
+def _ledger_line(t, rng, gentle=False):
     """One true line of the ledger: (text, correct_total)."""
     pick = rng.randint(1, 3)
+    if gentle:                      # K-1: sums within 20
+        a = rng.randint(2, 9 if t <= 2 else 12)
+        b = rng.randint(1, min(8, 20 - a))
+        if pick == 3 and a + b <= 18:
+            c = rng.randint(1, 20 - a - b)
+            return f"{a} + {b} + {c}", a + b + c
+        if pick == 2:
+            return f"{a + b} − {b}", a
+        return f"{a} + {b}", a + b
     if t <= 2:
         a, b = rng.randint(12, 60), rng.randint(12, 39)
         if pick == 1:
@@ -183,11 +192,11 @@ def _ledger_line(t, rng):
     return f"{x} × {y} + {c}", x * y + c
 
 
-def _ledger(t, rng):
-    n_lines = 4 if t <= 3 else 5
+def _ledger(t, rng, gentle=False):
+    n_lines = 3 if gentle else 4 if t <= 3 else 5
     lines, seen = [], set()
     while len(lines) < n_lines:
-        text, total = _ledger_line(t, rng)
+        text, total = _ledger_line(t, rng, gentle)
         if text not in seen:
             seen.add(text)
             lines.append((text, total))
@@ -213,9 +222,16 @@ _MAKERS = {"coins": _coins, "multiples": _multiples, "share": _share,
            "shade": _shade, "garden": _garden, "ledger": _ledger}
 
 
-def generate(kind: str, tier: int, rng: random.Random | None = None) -> Task:
+def generate(kind: str, tier: int, rng: random.Random | None = None,
+             topic: str | None = None, gentle: bool = False) -> Task:
+    """Make a task. `topic` is the curriculum topic it counts for (default:
+    the 4th-grade one). `gentle` (ledger only) keeps the sums within 20."""
     rng = rng or random
-    return _MAKERS[kind](max(1, min(5, tier)), rng)
+    tier = max(1, min(5, tier))
+    task = _ledger(tier, rng, True) if kind == "ledger" and gentle else _MAKERS[kind](tier, rng)
+    if topic:
+        task.topic = topic
+    return task
 
 
 def check(task: Task, value) -> bool:
