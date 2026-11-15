@@ -1,0 +1,892 @@
+# 2nd grade: The Number Thief of Arithmos
+#
+# Levels: 1 = start of the year, 3 = standard, 5 = stretch.
+# Never reorder or delete topics (hero codes depend on the order); add at the end.
+
+grade = "2"
+name  = "2nd grade"
+
+# ---------------------------------------------------------------------------
+[[region]]
+key    = "village"
+name   = "Market Village"
+gem    = "Gem of Sums"
+topics = ["g2_add100", "g2_sub100", "g2_money"]
+task   = "coins"
+task_topic  = "g2_add100"
+task_levels = [1, 2]
+intro  = "The market has lost its numbers! Prices, change, the baker's count of buns: all gone. Add, subtract and count the coins to bring them back."
+  [[region.encounter]]
+  slot  = 0
+  intro = "My buns are counted in two trays. How many in all?"
+  [[region.encounter]]
+  slot  = 1
+  intro = "Coins and bills, all mixed up! How much money is this?"
+  [[region.encounter]]
+  slot  = 4
+  intro = "Fifty years of fishing, and today I can't add my catch!"
+
+[[region]]
+key    = "mines"
+name   = "Place Value Mines"
+gem    = "Gem of Hundreds"
+topics = ["g2_place", "g2_compare3", "g2_skip"]
+task   = "multiples"
+task_topic  = "g2_skip"
+task_levels = [1, 1]
+intro  = "The miners pack crystals in boxes of a hundred, bundles of ten, and loose ones. Hundreds, tens, ones: count them and compare the piles!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "Boxes of a hundred and bundles of ten. What number is that?"
+  [[region.encounter]]
+  slot  = 1
+  intro = "Which cart holds more? Compare the hundreds first."
+  [[region.encounter]]
+  slot  = 4
+  intro = "Count by fives, tens, hundreds. Can you keep up?"
+
+[[region]]
+key    = "docks"
+name   = "Array Docks"
+gem    = "Gem of Rows"
+topics = ["g2_arrays", "g2_add1000"]
+task   = "share"
+task_topic  = "g2_arrays"
+task_levels = [1, 1]
+intro  = "The crates at the docks are stacked in neat rows. Count the rows and columns, and add up the big shipments!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "My crates are stacked in rows. How many crates, sailor?"
+  [[region.encounter]]
+  slot  = 1
+  intro = "Even or odd? Can the fish be split in two equal piles?"
+  [[region.encounter]]
+  slot  = 4
+  intro = "A good cook counts big numbers too. Add this shipment."
+
+[[region]]
+key    = "forest"
+name   = "Measure Forest"
+gem    = "Gem of Measures"
+topics = ["g2_length", "g2_time"]
+intro  = "In the forest the rangers measure trees and watch the clock. But every ruler and clock has lost its numbers!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "How long is my rolling pin? Help me measure."
+  [[region.encounter]]
+  slot  = 1
+  intro = "Whooo knows the time? Read the clock for me, little hero."
+  [[region.encounter]]
+  slot  = 4
+  intro = "How far did the fawns walk? Measure with me."
+
+[[region]]
+key    = "castle"
+name   = "Castle of Charts"
+gem    = "Gem of Charts"
+topics = ["g2_graphs", "g2_shapes"]
+task   = "shade"
+task_topic  = "g2_shapes"
+task_levels = [1, 2]
+intro  = "The castle keeps charts of everything: the harvest, the visitors, the shapes of its windows. Read the graphs and name the shapes!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "The harvest chart! Read the bars for me."
+  [[region.encounter]]
+  slot  = 1
+  intro = "My garden beds are cut into equal parts. What are they called?"
+  [[region.encounter]]
+  slot  = 4
+  intro = "One last chart before the tower. Read it well."
+
+[[region]]
+key    = "peak"
+name   = "Dragon's Peak"
+gem    = "Gem of Wisdom"
+topics = ["g2_two_step"]
+mix    = true
+final  = true
+task   = "ledger"
+task_topic  = "g2_two_step"
+task_levels = [1, 2]
+  [[region.encounter]]
+  slot  = 0
+  intro = "Up here, one step is never enough. Take two. Think slowly."
+
+# ---------------------------------------------------------------------------
+[[topic]]
+id       = "g2_add100"
+label    = "Adding within 100"
+standard = "2.NBT.B.5"
+tip      = "Add the tens, then the ones. If the ones make ten or more, carry one ten."
+
+  [[topic.question]]
+  vars    = { a = "randint(10, [40, 60, 80, 89, 89][L - 1])", b = "randint(10, [30, 39, 59, 89, 89][L - 1])" }
+  where   = "a + b <= 99 and (L >= 3 or a % 10 + b % 10 < 10)"
+  text    = "{a} + {b} = ?"
+  answer  = "a + b"
+  hint    = "Tens: {a // 10} + {b // 10}. Ones: {a % 10} + {b % 10}."
+  explain = "{a} + {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(10, 79)", b = "randint(10, 59)", ns = "names(2)", what = "item()" }
+  where   = "a + b <= 99 and (L >= 3 or a % 10 + b % 10 < 10)"
+  text    = "{ns[0]} picked {a} {what}. {ns[1]} picked {b}. How many together?"
+  answer  = "a + b"
+  hint    = "Add the tens, then the ones."
+  explain = "{a} + {b} = {answer} {what}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { t = "randint(30, 99)", a = "randint(10, t - 1)" }
+  text    = "{a} + ? = {t}"
+  answer  = "t - a"
+  hint    = "Count up from {a} to {t}: first to the next ten, then on."
+  explain = "{a} + {answer} = {t}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(10, 40)", b = "randint(10, 30)", c = "randint(1, 29)" }
+  where   = "a + b + c <= 99"
+  text    = "{a} + {b} + {c} = ?"
+  answer  = "a + b + c"
+  hint    = "Add two numbers first, then the third."
+  explain = "{a} + {b} = {a + b}, and {a + b} + {c} = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(12, 60)", b = "randint(5, 39)", ns = "names(2)" }
+  where   = "a + b <= 99"
+  text    = "{ns[0]} has {a} stickers. {ns[1]} has {b} more than {ns[0]}. How many does {ns[1]} have?"
+  answer  = "a + b"
+  hint    = "'More than' means add."
+  explain = "{a} + {b} = {answer} stickers."
+
+  [[topic.question]]
+  levels  = [5]
+  vars    = { a = "randint(10, 25)", b = "randint(10, 25)", c = "randint(10, 25)", d = "randint(10, 24)" }
+  text    = "{a} + {b} + {c} + {d} = ?"
+  answer  = "a + b + c + d"
+  hint    = "Add all the tens first, then all the ones."
+  explain = "Tens: {10 * (a // 10 + b // 10 + c // 10 + d // 10)}. Ones: {a % 10 + b % 10 + c % 10 + d % 10}. Total {answer}."
+
+[[topic]]
+id       = "g2_sub100"
+label    = "Subtracting within 100"
+standard = "2.NBT.B.5"
+tip      = "Subtract the ones first. Not enough ones? Borrow a ten: 10 more ones, one ten fewer."
+
+  [[topic.question]]
+  vars    = { a = "randint(20, [50, 70, 99, 99, 99][L - 1])", b = "randint(1, [9, 19, 89, 89, 89][L - 1])" }
+  where   = "b < a and (L >= 3 or a % 10 >= b % 10)"
+  text    = "{a} − {b} = ?"
+  answer  = "a - b"
+  hint    = "Take away the tens, then the ones."
+  explain = "{a} − {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(20, 99)", b = "randint(5, 89)", who = "name()", what = "item()" }
+  where   = "b < a and (L >= 3 or a % 10 >= b % 10)"
+  text    = "{who} had {a} {what}. Gave away {b}. How many are left?"
+  answer  = "a - b"
+  hint    = "Take {b} away from {a}."
+  explain = "{a} − {b} = {answer} {what}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(20, 99)", b = "randint(10, 89)", ns = "names(2)" }
+  where   = "a > b"
+  text    = "{ns[0]} has {a} marbles. {ns[1]} has {b}. How many more does {ns[0]} have?"
+  answer  = "a - b"
+  hint    = "Find the difference: {a} − {b}."
+  explain = "{a} − {b} = {answer} more."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(20, 99)", c = "randint(1, 89)" }
+  where   = "c < a"
+  text    = "{a} − ? = {c}"
+  answer  = "a - c"
+  hint    = "How far is it from {c} up to {a}?"
+  explain = "{a} − {answer} = {c}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(20, 60)", b = "randint(5, 55)" }
+  where   = "b < a"
+  text    = "A bus has {a} seats. {b} are taken. How many are empty?"
+  answer  = "a - b"
+  hint    = "Take the full seats away from all the seats."
+  explain = "{a} − {b} = {answer} empty seats."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { b = "randint(10, 60)", c = "randint(1, 39)" }
+  text    = "? − {b} = {c}"
+  answer  = "b + c"
+  hint    = "Add back: {c} + {b}."
+  explain = "{c} + {b} = {answer}, so {answer} − {b} = {c}."
+
+[[topic]]
+id       = "g2_money"
+label    = "Money"
+standard = "2.MD.C.8"
+tip      = "Count the big coins first: quarters are 25, dimes 10, nickels 5, pennies 1. A dollar is 100 cents."
+
+  [[topic.question]]
+  vars    = { pool = "[10, 10, 5, 5, 1, 1, 1] if L == 1 else [25, 25, 10, 10, 10, 5, 5, 5, 1, 1, 1, 1]", k = "randint(2, [3, 4, 5, 6, 6][L - 1])", cs = "sorted(sample(pool, k))" }
+  text    = "How many cents are these coins?"
+  answer  = "sum(cs)"
+  hint    = "Start with the biggest coin and count on."
+  explain = "{join(reversed(cs), ' + ')} = {answer} cents."
+  picture = ["coins", "reversed(cs)"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { q = "randint(1, [1, 2, 3, 3, 3][L - 1])", d = "randint(1, [3, 4, 5, 6, 6][L - 1])", who = "name()" }
+  text    = "{who} has {q} {'quarter' if q == 1 else 'quarters'} and {d} {'dime' if d == 1 else 'dimes'}. How many cents?"
+  answer  = "25 * q + 10 * d"
+  hint    = "Quarters are 25 each, dimes are 10 each."
+  explain = "{q} × 25 = {25 * q}, and {d} × 10 = {10 * d}. {25 * q} + {10 * d} = {answer} cents."
+  picture = ["coins", "[25] * q + [10] * d"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "decimal"
+  vars    = { b = "randint(1, [1, 2, 5, 9, 9][L - 1])", k = "randint(1, [2, 3, 4, 5, 5][L - 1])", cs = "sorted(sample([25, 25, 10, 10, 10, 5, 5, 1, 1, 1], k))" }
+  text    = "{b} {'dollar bill' if b == 1 else 'dollar bills'} and these coins. How much money? (Write it like $2.35.)"
+  answer  = "(100 * b + sum(cs)) / 100"
+  hint    = "Count the dollars, then the cents. 100 cents make a dollar."
+  explain = "{b} {'dollar' if b == 1 else 'dollars'} and {sum(cs)} cents is {answer|money}."
+  picture = ["coins", "[100] * b + reversed(cs)"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { p = "randint(10, 95)", paid = "100 if p >= 50 else choice([50, 100])", who = "name()", thing = "choice(['toy', 'pencil', 'apple', 'sticker', 'eraser'])" }
+  text    = "A {thing} costs {p} cents. {who} pays {paid} cents. How much change?"
+  answer  = "paid - p"
+  hint    = "Count up from {p} to {paid}."
+  explain = "{paid} − {p} = {answer} cents change."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "decimal"
+  vars    = { a = "randint(100, 900) / 100", b = "randint(25, 300) / 100" }
+  text    = "A book costs {a|money}. A pen costs {b|money}. How much together?"
+  answer  = "a + b"
+  hint    = "Add the dollars, then add the cents. 100 cents make another dollar."
+  explain = "{a|money} + {b|money} = {answer|money}."
+
+  [[topic.question]]
+  levels  = [5]
+  kind    = "decimal"
+  vars    = { p = "randint(105, 995) / 100", who = "name()", thing = "choice(['kite', 'puzzle', 'book', 'ball'])" }
+  text    = "{who} buys a {thing} for {p|money} and pays with a $10 bill. How much change?"
+  answer  = "10 - p"
+  hint    = "Count up from {p|money} to $10."
+  explain = "$10.00 − {p|money} = {answer|money}."
+
+[[topic]]
+id       = "g2_place"
+label    = "Place value to 1000"
+standard = "2.NBT.A.1"
+tip      = "Hundreds, tens, ones. 347 is 3 hundreds, 4 tens and 7 ones: 300 + 40 + 7."
+
+  [[topic.question]]
+  vars    = { h = "randint(1, [3, 5, 9, 9, 9][L - 1])", t = "randint(0, 9)", o = "randint(0, 9)" }
+  text    = "{h} hundreds, {t} tens and {o} ones. What number?"
+  answer  = "100 * h + 10 * t + o"
+  hint    = "{h} hundreds is {100 * h}. Then add the tens and the ones."
+  explain = "{100 * h} + {10 * t} + {o} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { n = "randint(100, 999)", p = "choice([1, 10, 100])" }
+  text    = "What digit is in the {'ones' if p == 1 else 'tens' if p == 10 else 'hundreds'} place of {n}?"
+  answer  = "digit(n, p)"
+  hint    = "Hundreds, tens, ones: from the left."
+  explain = "{n} is {digit(n, 100)} hundreds, {digit(n, 10)} tens, {digit(n, 1)} ones. The digit is {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { n = "randint(101, 999)" }
+  where   = "n % 100 != 0"
+  text    = "{expanded(n)} = ?"
+  answer  = "n"
+  hint    = "Put the hundreds, tens and ones together."
+  explain = "{expanded(n)} = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { n = "randint(101, 899)" }
+  text    = "Which number is {n|word}?"
+  answer  = "n"
+  choices = ["n", "n + 10", "n + 100", "n - 1"]
+  hint    = "Hundreds first, then the rest."
+  explain = "{n|word} is {n}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(100, 999)", p = "choice([1, 10, 100])" }
+  where   = "different(digit(n, 1), digit(n, 10), digit(n, 100)) and digit(n, p) != 0"
+  text    = "What is the value of the {digit(n, p)} in {n}?"
+  answer  = "digit(n, p) * p"
+  hint    = "Which place is it in: ones, tens or hundreds?"
+  explain = "The {digit(n, p)} is in the {'ones' if p == 1 else 'tens' if p == 10 else 'hundreds'} place, so it is worth {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(1, 7)", b = "randint(10, 19)" }
+  text    = "{a} hundreds and {b} tens. What number?"
+  answer  = "100 * a + 10 * b"
+  hint    = "{b} tens is {10 * b}: more than a hundred!"
+  explain = "{100 * a} + {10 * b} = {answer}."
+
+[[topic]]
+id       = "g2_compare3"
+label    = "Comparing 3-digit numbers"
+standard = "2.NBT.A.4"
+tip      = "Compare the hundreds first. Same? Then the tens. Same again? Then the ones."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { a = "randint(100, [500, 999, 999, 999, 999][L - 1])", b = "randint(100, 999) if L <= 2 else a + choice([-100, -10, -1, 0, 1, 10, 100])" }
+  where   = "100 <= b <= 999"
+  text    = "{a} ? {b}   Which sign goes in the middle?"
+  answer  = "compare(a, b)"
+  choices = ["'<'", "'>'", "'='"]
+  shuffle = false
+  hint    = "Compare the hundreds first."
+  explain = "{a} {answer} {b}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(100, 999)", b = "randint(100, 999) if L <= 2 else a + choice([-110, -90, -11, -9, 9, 11, 90, 110])" }
+  where   = "a != b and 100 <= b <= 999"
+  text    = "Which is bigger: {a} or {b}?"
+  answer  = "max(a, b)"
+  choices = ["a", "b"]
+  shuffle = false
+  hint    = "Hundreds, then tens, then ones."
+  explain = "{max(a, b)} is bigger than {min(a, b)}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(100, 999)", b = "randint(100, 999)", c = "randint(100, 999)" }
+  where   = "different(a, b, c)"
+  text    = "Which is smallest: {a}, {b} or {c}?"
+  answer  = "min(a, b, c)"
+  choices = ["a", "b", "c"]
+  shuffle = false
+  hint    = "The fewest hundreds wins."
+  explain = "{answer} is the smallest."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(199, 998)" }
+  where   = "L <= 3 or n % 10 == 9"
+  text    = "What number is 1 more than {n}?"
+  answer  = "n + 1"
+  hint    = "Count on one. 9 ones become a new ten."
+  explain = "{n} + 1 = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(100, 999)", b = "randint(100, 999)", c = "randint(100, 999)" }
+  where   = "different(a, b, c) and [a, b, c] != sorted([a, b, c]) and [a, b, c] != reversed(sorted([a, b, c]))"
+  text    = "Which list goes from least to greatest?"
+  answer  = "join(sorted([a, b, c]))"
+  choices = ["join(sorted([a, b, c]))", "join(reversed(sorted([a, b, c])))", "join([a, b, c])"]
+  hint    = "The smallest number comes first."
+  explain = "Least to greatest: {answer}."
+
+[[topic]]
+id       = "g2_skip"
+label    = "Skip counting, 10 and 100 more"
+standard = "2.NBT.A.2"
+tip      = "Count by 5s: 5, 10, 15... By 10s the ones digit stays the same. By 100s the hundreds digit grows."
+
+  [[topic.question]]
+  vars    = { s = "choice([5, 10] if L == 1 else [5, 10, 100])", a = "randstep(0, min(10 * s, 700), s)" }
+  text    = "Count by {s}s: {a}, {a + s}, {a + 2 * s}, ?"
+  answer  = "a + 3 * s"
+  hint    = "Add {s} to {a + 2 * s}."
+  explain = "{a + 2 * s} + {s} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { n = "randint(100, 989)" }
+  text    = "What is 10 more than {n}?"
+  answer  = "n + 10"
+  hint    = "The tens digit goes up by one."
+  explain = "{n} + 10 = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { n = "randint(200, 999)" }
+  text    = "What is 100 less than {n}?"
+  answer  = "n - 100"
+  hint    = "The hundreds digit goes down by one."
+  explain = "{n} − 100 = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(110, 999)" }
+  text    = "What is 10 less than {n}?"
+  answer  = "n - 10"
+  hint    = "The tens digit goes down by one."
+  explain = "{n} − 10 = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { s = "choice([5, 10, 100])", a = "randstep(3 * s, 10 * s, s)" }
+  text    = "Count back by {s}s: {a}, {a - s}, {a - 2 * s}, ?"
+  answer  = "a - 3 * s"
+  hint    = "Take {s} away from {a - 2 * s}."
+  explain = "{a - 2 * s} − {s} = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { n = "randstep(20, 990, 10)" }
+  text    = "How many tens make {n}?"
+  answer  = "n // 10"
+  hint    = "Count by tens up to {n}."
+  explain = "{answer} tens = {n}."
+
+[[topic]]
+id       = "g2_arrays"
+label    = "Even, odd and arrays"
+standard = "2.OA.C.3"
+tip      = "Even numbers pair up with none left over: they end in 0, 2, 4, 6 or 8. In an array, add one row for every row."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { n = "randint(1, [10, 20, 50, 100, 100][L - 1])" }
+  text    = "Is {n} even or odd?"
+  answer  = "'even' if n % 2 == 0 else 'odd'"
+  choices = ["'even'", "'odd'"]
+  shuffle = false
+  hint    = "Look at the ones digit."
+  explain = "{n} ends in {n % 10}, so it is {answer}."
+
+  [[topic.question]]
+  vars    = { r = "randint(2, [3, 4, 5, 5, 5][L - 1])", c = "randint(2, 5)" }
+  text    = "How many dots are there?"
+  answer  = "r * c"
+  hint    = "Count one row. Then add that number once for every row."
+  explain = "{r} rows of {c}: {join([c] * r, ' + ')} = {answer}."
+  picture = ["array", "r", "c"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { r = "randint(2, 5)", c = "randint(2, 5)" }
+  text    = "{r} rows of {c}. {join([c] * r, ' + ')} = ?"
+  answer  = "r * c"
+  hint    = "Add {c} again and again, {r} times."
+  explain = "{join([c] * r, ' + ')} = {answer}."
+  picture = ["array", "r", "c"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "2 * randint(1, 9)", b = "2 * randint(0, 9) + 1", c = "2 * randint(0, 9) + 1" }
+  where   = "b != c"
+  text    = "Which number is even: {a}, {b} or {c}?"
+  answer  = "a"
+  choices = ["a", "b", "c"]
+  hint    = "Even numbers end in 0, 2, 4, 6 or 8."
+  explain = "{a} is even. {b} and {c} are odd."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { r = "randint(2, 5)", c = "randint(2, 5)", what = "choice(['chairs', 'cups', 'eggs', 'stamps'])" }
+  text    = "{r} rows of {c} {what}. How many {what}?"
+  answer  = "r * c"
+  hint    = "Add {c} for every row: {r} times."
+  explain = "{join([c] * r, ' + ')} = {answer} {what}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1, 20)", b = "randint(1, 20)" }
+  text    = "Is {a} + {b} even or odd?"
+  answer  = "'even' if (a + b) % 2 == 0 else 'odd'"
+  choices = ["'even'", "'odd'"]
+  shuffle = false
+  hint    = "Add first. Then look at the ones digit."
+  explain = "{a} + {b} = {a + b}, which is {answer}."
+
+[[topic]]
+id       = "g2_add1000"
+label    = "Adding and subtracting within 1000"
+standard = "2.NBT.B.7"
+tip      = "Line up hundreds, tens and ones. Start with the ones, carrying or borrowing when you need to."
+
+  [[topic.question]]
+  vars    = { a = "randint(100, [400, 500, 800, 899, 899][L - 1])", b = "randint(100, [300, 400, 500, 899, 899][L - 1])" }
+  where   = "a + b <= 999 and (L >= 3 or (digit(a, 1) + digit(b, 1) < 10 and digit(a, 10) + digit(b, 10) < 10))"
+  text    = "{a} + {b} = ?"
+  answer  = "a + b"
+  hint    = "Ones, then tens, then hundreds."
+  explain = "{a} + {b} = {answer}."
+
+  [[topic.question]]
+  vars    = { a = "randint(200, 999)", b = "randint(100, 899)" }
+  where   = "b < a and (L >= 3 or (digit(a, 1) >= digit(b, 1) and digit(a, 10) >= digit(b, 10)))"
+  text    = "{a} − {b} = ?"
+  answer  = "a - b"
+  hint    = "Ones, then tens, then hundreds. Borrow when a digit is too small."
+  explain = "{a} − {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(100, 700)", b = "randint(100, 500)" }
+  where   = "a + b <= 999"
+  text    = "The school has {a} books. It gets {b} more. How many books now?"
+  answer  = "a + b"
+  hint    = "Add the hundreds, tens and ones."
+  explain = "{a} + {b} = {answer} books."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(300, 999)", b = "randint(100, 800)" }
+  where   = "b < a"
+  text    = "{a} people are at the fair. {b} go home. How many stay?"
+  answer  = "a - b"
+  hint    = "Take {b} away from {a}."
+  explain = "{a} − {b} = {answer} people."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "100 * randint(3, 9)", b = "randint(101, a - 1)" }
+  where   = "b % 10 != 0"
+  text    = "{a} − {b} = ?"
+  answer  = "a - b"
+  hint    = "Borrow across the zeros: {a} is {a - 100} + 90 + 10."
+  explain = "{a} − {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [5]
+  vars    = { a = "randint(100, 400)", b = "randint(100, 300)", c = "randint(10, 299)" }
+  where   = "a + b + c <= 999"
+  text    = "{a} + {b} + {c} = ?"
+  answer  = "a + b + c"
+  hint    = "Add two numbers first, then the third."
+  explain = "{a} + {b} = {a + b}, and {a + b} + {c} = {answer}."
+
+[[topic]]
+id       = "g2_length"
+label    = "Measuring length"
+standard = "2.MD.A.1"
+tip      = "Inches and feet, centimeters and meters. 12 inches make a foot, 100 centimeters make a meter."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { p = "choice([['a pencil', 'inches', 'feet'], ['a room', 'feet', 'inches'], ['a paper clip', 'centimeters', 'meters'], ['a bus', 'meters', 'centimeters'], ['a book', 'inches', 'feet'], ['a soccer field', 'meters', 'centimeters'], ['a door', 'feet', 'inches'], ['a finger', 'centimeters', 'meters']])" }
+  text    = "Which unit is best to measure {p[0]}?"
+  answer  = "p[1]"
+  choices = ["p[1]", "p[2]"]
+  hint    = "Small things: inches or centimeters. Big things: feet or meters."
+  explain = "{p[0]} is best measured in {answer}."
+
+  [[topic.question]]
+  vars    = { a = "randint(5, [20, 50, 99, 99, 99][L - 1])", b = "randint(1, [20, 50, 99, 99, 99][L - 1])" }
+  where   = "a > b"
+  text    = "A ribbon is {a} cm. Another is {b} cm. How much longer is the long one?"
+  answer  = "a - b"
+  hint    = "Find the difference: {a} − {b}."
+  explain = "{a} − {b} = {answer} cm longer."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(10, 60)", b = "randint(5, 39)", who = "name()" }
+  where   = "a + b <= 99"
+  text    = "{who} walks {a} meters, then {b} meters more. How far in all?"
+  answer  = "a + b"
+  hint    = "Add the two walks."
+  explain = "{a} + {b} = {answer} meters."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { hi = "[10, 20, 20, 30, 50][L - 1]", n = "randint(1, hi - 1)" }
+  text    = "What number is at the point on the number line?"
+  answer  = "n"
+  hint    = "Count the marks from 0, or from the nearest label."
+  explain = "The point is at {answer}."
+  picture = ["number_line", "0", "hi", "n"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { f = "randint(1, [1, 1, 3, 5, 8][L - 1])" }
+  text    = "A rope is {f} {'foot' if f == 1 else 'feet'} long. How many inches is that?"
+  answer  = "12 * f"
+  hint    = "Each foot is 12 inches."
+  explain = "{f} × 12 = {answer} inches."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(10, 90)" }
+  text    = "A string is {a} cm. How many more cm to make 1 meter?"
+  answer  = "100 - a"
+  hint    = "1 meter is 100 cm. Count up from {a} to 100."
+  explain = "{a} + {answer} = 100 cm."
+
+[[topic]]
+id       = "g2_time"
+label    = "Telling time"
+standard = "2.MD.C.7"
+tip      = "The long hand counts by 5s: on the 3 it is 15 minutes. Morning is a.m.; afternoon and evening are p.m."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { h = "randint(1, 12)", m = "choice([0, 30]) if L == 1 else choice([0, 15, 30, 45]) if L == 2 else randstep(0, 55, 5)" }
+  text    = "What time does the clock show?"
+  answer  = "time(h, m)"
+  choices = ["time(h, m)", "time(h % 12 + 1, m)", "time(h, (m + 15) % 60)"]
+  hint    = "Short hand: the hour. Long hand: count by 5s from the 12."
+  explain = "The long hand is on the {m // 5 if m else 12}, so {m} minutes. It is {answer}."
+  picture = ["clock", "h", "m"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { p = "choice([['eating breakfast', 7, 'a.m.'], ['going to bed', 8, 'p.m.'], ['watching the sunrise', 6, 'a.m.'], ['eating dinner', 6, 'p.m.'], ['riding the bus to school', 8, 'a.m.'], ['playing after school', 4, 'p.m.'], ['eating lunch', 12, 'p.m.'], ['brushing teeth before school', 7, 'a.m.']])", who = "name()" }
+  text    = "It is {p[1]}:00 and {who} is {p[0]}. Is it a.m. or p.m.?"
+  answer  = "p[2]"
+  choices = ["'a.m.'", "'p.m.'"]
+  shuffle = false
+  hint    = "a.m. is before noon, p.m. is after."
+  explain = "{p[0]} happens at {p[1]}:00 {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { k = "randint(1, 11)" }
+  text    = "The long hand points to the {k}. How many minutes past the hour?"
+  answer  = "5 * k"
+  hint    = "Count by 5s: 5, 10, 15..."
+  explain = "{k} × 5 = {answer} minutes."
+  picture = ["clock", "randint(1, 12)", "5 * k"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { h = "randint(1, 12)", m = "choice([0, 30])", ans = "time(h, 30) if m == 0 else time(h % 12 + 1, 0)" }
+  text    = "It is {time(h, m)}. What time is it 30 minutes later?"
+  answer  = "ans"
+  choices = ["ans", "time(h, m)", "time(h % 12 + 1, m)"]
+  hint    = "30 minutes is half an hour."
+  explain = "{time(h, m)} + 30 minutes = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { h = "randint(1, 12)", m = "choice([15, 30, 45])" }
+  text    = "Which words say this time?"
+  answer  = "'quarter past ' + str(h) if m == 15 else 'half past ' + str(h) if m == 30 else 'quarter to ' + str(h % 12 + 1)"
+  choices = ["'quarter past ' + str(h)", "'half past ' + str(h)", "'quarter to ' + str(h % 12 + 1)"]
+  shuffle = false
+  hint    = "15 minutes is a quarter. 30 is half. 45 is a quarter to the next hour."
+  explain = "{time(h, m)} is {answer}."
+  picture = ["clock", "h", "m"]
+
+[[topic]]
+id       = "g2_graphs"
+label    = "Picture and bar graphs"
+standard = "2.MD.D.10"
+tip      = "Read the number at the top of each bar. For 'how many more', subtract the short bar from the tall one."
+
+  [[topic.question]]
+  vars    = { labels = "sample(['apples', 'pears', 'plums', 'grapes'], 3)", cs = "sample(range(1, [6, 9, 11, 13, 13][L - 1]), 3)" }
+  text    = "How many {labels[0]} were picked?"
+  answer  = "cs[0]"
+  hint    = "Find the bar for {labels[0]}. Read its top on the scale."
+  explain = "The {labels[0]} bar goes up to {answer}."
+  picture = ["bar_graph", "labels", "cs"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { labels = "sample(['apples', 'pears', 'plums', 'grapes'], 3)", cs = "sample(range(1, 13), 3)" }
+  where   = "cs[0] > cs[1]"
+  text    = "How many more {labels[0]} than {labels[1]}?"
+  answer  = "cs[0] - cs[1]"
+  hint    = "Read both bars. Subtract."
+  explain = "{cs[0]} − {cs[1]} = {answer} more {labels[0]}."
+  picture = ["bar_graph", "labels", "cs"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { labels = "sample(['apples', 'pears', 'plums', 'grapes'], 3)", cs = "sample(range(1, 13), 3)" }
+  text    = "Which fruit was picked the most?"
+  answer  = "labels[index(cs, max(cs))]"
+  choices = ["labels[0]", "labels[1]", "labels[2]"]
+  shuffle = false
+  hint    = "The tallest bar wins."
+  explain = "{answer} has the tallest bar: {max(cs)}."
+  picture = ["bar_graph", "labels", "cs"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { labels = "sample(['apples', 'pears', 'plums', 'grapes'], 3)", cs = "sample(range(1, 13), 3)" }
+  text    = "How many fruits were picked in all?"
+  answer  = "sum(cs)"
+  hint    = "Read all three bars. Add them."
+  explain = "{join(cs, ' + ')} = {answer}."
+  picture = ["bar_graph", "labels", "cs"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { e = "choice([2, 5])", labels = "sample(['cats', 'dogs', 'fish', 'birds'], 2)", a = "e * randint(1, 6)", b = "e * randint(1, 6)" }
+  where   = "a != b"
+  text    = "Each star stands for {e}. How many {labels[0]}?"
+  answer  = "a"
+  hint    = "Count the stars, then count by {e}s."
+  explain = "{a // e} stars × {e} = {answer}."
+  picture = ["picture_graph", "labels", "[a, b]", "e"]
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { s = "choice([2, 5])", labels = "sample(['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], 3)", cs = "[s * randint(1, 8), s * randint(1, 8), s * randint(1, 8)]" }
+  where   = "cs[0] > cs[1]"
+  text    = "Books read each day. How many more on {labels[0]} than on {labels[1]}?"
+  answer  = "cs[0] - cs[1]"
+  hint    = "The scale goes up by {s}. Read each bar carefully."
+  explain = "{cs[0]} − {cs[1]} = {answer} more."
+  picture = ["bar_graph", "labels", "cs", "s"]
+
+[[topic]]
+id       = "g2_shapes"
+label    = "Shapes and equal parts"
+standard = "2.G.A.1"
+tip      = "Count sides and corners. Halves are 2 equal parts, thirds 3, fourths 4."
+
+  [[topic.question]]
+  vars    = { names = "['triangle', 'square', 'rectangle', 'pentagon', 'hexagon']", s = "choice(names[:2 + L])", n = "[3, 4, 4, 5, 6][index(names, s)]" }
+  text    = "How many sides does this shape have?"
+  answer  = "n"
+  hint    = "Trace each straight side with your finger."
+  explain = "A {s} has {n} sides."
+  picture = ["shape", "s"]
+
+  [[topic.question]]
+  vars    = { n = "choice([2, 3, 4])", k = "randint(1, n - 1)" }
+  text    = "The shape is cut into {n} equal parts. How many are colored?"
+  answer  = "k"
+  hint    = "Count the green parts."
+  explain = "{k} of the {n} parts are colored."
+  picture = ["parts", "n", "k"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { names = "['triangle', 'quadrilateral', 'pentagon', 'hexagon']", n = "randint(3, 6)" }
+  text    = "Which shape has {n} sides?"
+  answer  = "names[n - 3]"
+  choices = ["names[0]", "names[1]", "names[2]", "names[3]"]
+  shuffle = false
+  hint    = "Tri = 3, quad = 4, penta = 5, hexa = 6."
+  explain = "A {answer} has {n} sides."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { n = "choice([2, 3, 4])" }
+  text    = "This shape is cut into equal parts. What are they called?"
+  answer  = "['halves', 'thirds', 'fourths'][n - 2]"
+  choices = ["'halves'", "'thirds'", "'fourths'"]
+  shuffle = false
+  hint    = "Count the parts: 2 halves, 3 thirds, 4 fourths."
+  explain = "{n} equal parts are {answer}."
+  picture = ["parts", "n", "0"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { p = "choice([['cube', 6, 'faces'], ['cube', 8, 'corners'], ['cube', 12, 'edges']])" }
+  text    = "How many {p[2]} does a cube have?"
+  answer  = "p[1]"
+  hint    = "Faces are the flat sides. Edges are where two faces meet. Corners are the points."
+  explain = "A cube has {answer} {p[2]}."
+  picture = ["shape", "'cube'"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "choice([2, 3, 4])", w = "['halves', 'thirds', 'fourths'][n - 2]", thing = "choice(['A pizza', 'A pie', 'A sandwich', 'A cake'])" }
+  text    = "{thing} is cut into {w}. How many equal pieces?"
+  answer  = "n"
+  hint    = "Halves: 2. Thirds: 3. Fourths: 4."
+  explain = "{w} means {answer} equal pieces."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { n = "choice([2, 3, 4])", w = "['halves', 'thirds', 'fourths'][n - 2]", p = "shuffled(['one half', 'one third', 'one fourth'])" }
+  text    = "A whole is cut into {w}. One piece is how much?"
+  answer  = "['one half', 'one third', 'one fourth'][n - 2]"
+  choices = ["p[0]", "p[1]", "p[2]"]
+  shuffle = false
+  hint    = "One of {n} equal parts."
+  explain = "One of {n} equal parts is {answer}."
+  picture = ["parts", "n", "1"]
+
+[[topic]]
+id       = "g2_two_step"
+label    = "Two-step problems"
+standard = "2.OA.A.1"
+tip      = "Do the first step and write the number down. Then do the second step with it."
+
+  [[topic.question]]
+  vars    = { a = "randint(5, [10, 20, 40, 60, 60][L - 1])", b = "randint(2, [9, 10, 20, 30, 30][L - 1])", c = "randint(1, [9, 10, 20, 30, 30][L - 1])", who = "name()", what = "item()" }
+  where   = "a + b - c >= 0 and a + b <= 99"
+  text    = "{who} has {a} {what}. Gets {b} more, then gives away {c}. How many now?"
+  answer  = "a + b - c"
+  hint    = "First {a} + {b}. Then take away {c}."
+  explain = "{a} + {b} = {a + b}, and {a + b} − {c} = {answer}."
+
+  [[topic.question]]
+  vars    = { a = "randint(3, [8, 15, 30, 50, 50][L - 1])", b = "randint(2, [8, 15, 30, 40, 40][L - 1])", c = "randint(1, [6, 10, 20, 30, 30][L - 1])", who = "name()" }
+  where   = "c <= a + b"
+  text    = "{who} buys {a} apples and {b} pears. Eats {c} fruits. How many fruits are left?"
+  answer  = "a + b - c"
+  hint    = "How many fruits at first? Then take away {c}."
+  explain = "{a} + {b} = {a + b} fruits, and {a + b} − {c} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(10, [20, 30, 50, 70, 70][L - 1])", b = "randint(1, [9, 15, 25, 40, 40][L - 1])", c = "randint(1, [9, 15, 25, 40, 40][L - 1])" }
+  where   = "b < a and a - b + c <= 99"
+  text    = "{a} kids are on a bus. {b} get off and {c} get on. How many kids now?"
+  answer  = "a - b + c"
+  hint    = "First {a} − {b}. Then add {c}."
+  explain = "{a} − {b} = {a - b}, and {a - b} + {c} = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(50, 99)", b = "randint(10, 45)", c = "randint(5, 45)", who = "name()" }
+  where   = "b + c <= a"
+  text    = "{who} has {a} cents. Buys a pencil for {b} cents and an eraser for {c} cents. How much is left?"
+  answer  = "a - b - c"
+  hint    = "Add the two prices first. Then subtract from {a}."
+  explain = "{b} + {c} = {b + c}, and {a} − {b + c} = {answer} cents."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { t = "randint(40, 99)", a = "randint(5, 40)", b = "randint(5, 40)", who = "name()" }
+  where   = "a + b < t"
+  text    = "A book has {t} pages. {who} reads {a} pages on Monday and {b} on Tuesday. How many pages are left?"
+  answer  = "t - a - b"
+  hint    = "How many pages were read in all? Then subtract from {t}."
+  explain = "{a} + {b} = {a + b} read, and {t} − {a + b} = {answer} left."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { r = "randint(2, 5)", c = "randint(2, 10)", d = "randint(1, 9)" }
+  text    = "{r} boxes hold {c} crayons each, plus {d} loose crayons. How many crayons in all?"
+  answer  = "r * c + d"
+  hint    = "Add {c} for every box: {join([c] * r, ' + ')}. Then add the loose ones."
+  explain = "{join([c] * r, ' + ')} = {r * c}, and {r * c} + {d} = {answer}."

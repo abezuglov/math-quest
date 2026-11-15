@@ -1,0 +1,511 @@
+# Kindergarten: The Number Thief of Arithmos
+#
+# Reading level: short questions (about 10 words), numbers before words, a
+# picture whenever possible. Levels: 1 = start of the year, 3 = standard,
+# 5 = stretch. Never reorder or delete topics (hero codes); add at the end.
+
+grade = "K"
+name  = "Kindergarten"
+
+# ---------------------------------------------------------------------------
+[[region]]
+key    = "village"
+name   = "Counting Meadow"
+gem    = "Gem of Counting"
+topics = ["k_count", "k_after", "k_count_on"]
+intro  = "The sheep in the meadow have lost their numbers! Nobody can count them. Count the dots and the numbers will come back."
+outro  = "The Tally Troll gives up the Gem of Counting. Every sheep has its number again!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "My buns have no numbers! Count them for me, please."
+  [[region.encounter]]
+  slot  = 1
+  intro = "I lost count of my coins. Can you count for me?"
+  [[region.encounter]]
+  slot  = 4
+  intro = "Fifty years of fishing, and today I can't count my fish!"
+
+[[region]]
+key    = "mines"
+name   = "Compare Caves"
+gem    = "Gem of More"
+topics = ["k_compare"]
+intro  = "Deep in the caves, the miners have two piles of crystals. Which pile is bigger? Only a sharp eye can tell."
+outro  = "The Crystal Golem crumbles. The Gem of More shines in the dark!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "Two carts of crystals. Which cart has more?"
+  [[region.encounter]]
+  slot  = 1
+  intro = "Which pile of lamps is bigger? Help me see."
+  [[region.encounter]]
+  slot  = 4
+  intro = "One more look before the deep tunnel. Ready?"
+
+[[region]]
+key    = "docks"
+name   = "Adding Harbor"
+gem    = "Gem of Adding"
+topics = ["k_add", "k_make10"]
+intro  = "Boats bring fish to the harbor. More boats, more fish! Add them up and the sailors can go home."
+outro  = "The Kraken sinks away. The Gem of Adding bobs up out of the water!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "Two boats of fish came in. How many fish in all?"
+  [[region.encounter]]
+  slot  = 1
+  intro = "More fish for the nets! Help me add them."
+  [[region.encounter]]
+  slot  = 4
+  intro = "A good cook counts everything. Add this for me."
+
+[[region]]
+key    = "forest"
+name   = "Take-Away Woods"
+gem    = "Gem of Taking Away"
+topics = ["k_sub"]
+intro  = "In the woods, things keep going away. Birds fly off. Acorns roll away. How many are left? Count carefully!"
+outro  = "The Piecemeal Wolf trots away. The Gem of Taking Away is yours!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "Some of my pies are gone! How many are left?"
+  [[region.encounter]]
+  slot  = 1
+  intro = "Whooo can take away? Show me, little hero."
+  [[region.encounter]]
+  slot  = 4
+  intro = "Some fawns ran off. How many stayed?"
+
+[[region]]
+key    = "castle"
+name   = "Shape Castle"
+gem    = "Gem of Shapes"
+topics = ["k_shapes", "k_measure"]
+intro  = "The castle is made of shapes: round towers, square windows, pointy roofs. The builders need to know their shapes!"
+outro  = "The empty armor clatters down. The Gem of Shapes makes the castle whole again!"
+  [[region.encounter]]
+  slot  = 0
+  intro = "I need to build with the right shape. Help me name it!"
+  [[region.encounter]]
+  slot  = 1
+  intro = "Which is longer, which is heavier? Help me sort my garden."
+  [[region.encounter]]
+  slot  = 4
+  intro = "One last shape before the tower. What is it?"
+
+[[region]]
+key    = "peak"
+name   = "Dragon's Peak"
+gem    = "Gem of Wisdom"
+topics = ["k_teens"]
+mix    = true
+final  = true
+task   = "ledger"
+task_topic = "k_teens"
+task_levels = [1, 2]
+intro  = "The path climbs into the clouds. Up here the numbers are bigger than ten, and Zerix will test everything you have learned."
+  [[region.encounter]]
+  slot  = 0
+  intro = "Up here the numbers go past ten. Think slowly, hero."
+  [[region.encounter]]
+  slot  = 6
+  intro = "This is the page from the year we were sent away. One line is added wrong. Hero, can you find it?"
+
+# ---------------------------------------------------------------------------
+[[topic]]
+id       = "k_count"
+label    = "Counting to 20"
+standard = "K.CC.B.5"
+tip      = "Touch each dot as you count it. Say one number for each dot."
+
+  [[topic.question]]
+  vars    = { n = "randint(1, [5, 10, 15, 20, 20][L - 1])" }
+  text    = "How many dots?"
+  answer  = "n"
+  hint    = "Count each dot once. Touch it as you count."
+  explain = "There are {n} dots."
+  picture = ["dots", "n"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { n = "randint(3, [5, 10, 15, 20, 20][L - 1])", what = "item()" }
+  text    = "Count the {what}. How many?"
+  answer  = "n"
+  hint    = "Count the dots. Each dot is one."
+  explain = "{n} dots, so {n} {what}."
+  picture = ["dots", "n"]
+
+[[topic]]
+id       = "k_after"
+label    = "Number before and after"
+standard = "K.CC.A.2"
+tip      = "Count up: the number after comes next. Count back: the number before comes just before."
+
+  [[topic.question]]
+  vars    = { a = "randint(1, [5, 9, 14, 19, 19][L - 1])" }
+  text    = "What number comes after {a}?"
+  answer  = "a + 1"
+  hint    = "Count: {a}, then..."
+  explain = "After {a} comes {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(2, [5, 10, 15, 20, 20][L - 1])" }
+  text    = "What number comes before {a}?"
+  answer  = "a - 1"
+  hint    = "Count back one from {a}."
+  explain = "Before {a} comes {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(1, 17)" }
+  text    = "What number is between {a} and {a + 2}?"
+  answer  = "a + 1"
+  hint    = "Count: {a}, ?, {a + 2}."
+  explain = "{a}, {answer}, {a + 2}. The middle one is {answer}."
+
+[[topic]]
+id       = "k_count_on"
+label    = "Counting on"
+standard = "K.CC.A.2"
+tip      = "Say the start number, then count on with your fingers."
+
+  [[topic.question]]
+  vars    = { a = "randint(1, [3, 5, 8, 10, 14][L - 1])", b = "randint(1, [2, 3, 3, 5, 5][L - 1])" }
+  where   = "a + b <= 20"
+  text    = "Start at {a}. Count on {b}. What do you get?"
+  answer  = "a + b"
+  hint    = "Say {a}. Then count {b} more on your fingers."
+  explain = "{a}, then {join(range(a + 1, a + b + 1))}. You get {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(2, [3, 5, 8, 12, 16][L - 1])", n = "randint(3, 4)" }
+  where   = "a + n <= 20"
+  text    = "Count on: {a}, {a + 1}, {a + 2}, ?"
+  answer  = "a + 3"
+  hint    = "What comes after {a + 2}?"
+  explain = "{a}, {a + 1}, {a + 2}, {answer}."
+
+[[topic]]
+id       = "k_compare"
+label    = "More, fewer, same"
+standard = "K.CC.C.6"
+tip      = "Count both. The bigger count is more."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { a = "randint(1, [5, 10, 10, 20, 20][L - 1])", b = "randint(1, [5, 10, 10, 20, 20][L - 1])" }
+  where   = "a != b"
+  text    = "Which number is bigger: {a} or {b}?"
+  answer  = "max(a, b)"
+  choices = ["a", "b"]
+  shuffle = false
+  hint    = "Count up. Which number do you say last?"
+  explain = "{max(a, b)} is bigger than {min(a, b)}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1, [5, 10, 10, 20, 20][L - 1])", b = "randint(1, [5, 10, 10, 20, 20][L - 1])", pets = "choice([['cats', 'dogs'], ['ducks', 'hens'], ['frogs', 'fish'], ['cows', 'goats']])" }
+  where   = "a != b"
+  text    = "{a} {pets[0]} and {b} {pets[1]}. Which are more?"
+  answer  = "pets[0] if a > b else pets[1]"
+  choices = ["pets[0]", "pets[1]"]
+  shuffle = false
+  hint    = "Which number is bigger, {a} or {b}?"
+  explain = "{max(a, b)} is more than {min(a, b)}, so more {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1, 10)", b = "randint(1, 10)" }
+  text    = "Which number is smaller: {a} or {b}?"
+  where   = "a != b"
+  answer  = "min(a, b)"
+  choices = ["a", "b"]
+  shuffle = false
+  hint    = "Which number do you say first when you count?"
+  explain = "{min(a, b)} is smaller than {max(a, b)}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1, 10)", b = "randint(1, 10)" }
+  text    = "{a} and {b}: more, fewer, or the same?"
+  answer  = "'more' if a > b else 'fewer' if a < b else 'the same'"
+  choices = ["'more'", "'fewer'", "'the same'"]
+  shuffle = false
+  hint    = "Is {a} bigger than {b}, smaller, or equal?"
+  explain = "{a} is {answer}{' as' if a == b else ' than'} {b}."
+
+[[topic]]
+id       = "k_add"
+label    = "Adding within 10"
+standard = "K.OA.A.2"
+tip      = "Start with the bigger number. Count on the smaller one with your fingers."
+
+  [[topic.question]]
+  vars    = { a = "randint(1, [3, 5, 7, 9, 9][L - 1])", b = "randint(1, [2, 4, 5, 9, 9][L - 1])" }
+  where   = "a + b <= 10"
+  text    = "{a} + {b} = ?"
+  answer  = "a + b"
+  hint    = "Start at {a}. Count on {b} more."
+  explain = "{a} + {b} = {answer}."
+  picture = ["dots", "a + b"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(1, [3, 5, 7, 9, 9][L - 1])", b = "randint(1, [2, 4, 5, 9, 9][L - 1])", who = "name()", what = "item()" }
+  where   = "a + b <= 10"
+  text    = "{who} has {a} {what}. Gets {b} more. How many now?"
+  answer  = "a + b"
+  hint    = "Put them together: {a} and {b} more."
+  explain = "{a} + {b} = {answer} {what}."
+  picture = ["dots", "a + b"]
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(2, 8)", b = "randint(1, 8)" }
+  where   = "a + b <= 10"
+  text    = "{a} red dots and {b} blue dots. How many dots?"
+  answer  = "a + b"
+  hint    = "Count all the dots."
+  explain = "{a} + {b} = {answer}."
+  picture = ["dots", "a + b"]
+
+[[topic]]
+id       = "k_make10"
+label    = "Making 10"
+standard = "K.OA.A.4"
+tip      = "Use your ten fingers. Put some down. The fingers still up make 10 with them."
+
+  [[topic.question]]
+  vars    = { a = "randint([5, 3, 1, 1, 1][L - 1], 9)" }
+  text    = "{a} + ? = 10"
+  answer  = "10 - a"
+  hint    = "Count up from {a} to 10."
+  explain = "{a} + {answer} = 10."
+  picture = ["dots", "a"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(1, 9)" }
+  text    = "{a} fingers up. How many more make 10?"
+  answer  = "10 - a"
+  hint    = "How many fingers are down?"
+  explain = "{a} + {answer} = 10, so {answer} more."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(1, [5, 5, 4, 4, 4][L - 1])" }
+  text    = "? + {a} = 10"
+  answer  = "10 - a"
+  hint    = "What goes with {a} to make 10?"
+  explain = "{answer} + {a} = 10."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { t = "randint(5, 9)", a = "randint(1, t - 1)" }
+  text    = "{a} + ? = {t}"
+  answer  = "t - a"
+  hint    = "Count up from {a} to {t}."
+  explain = "{a} + {answer} = {t}."
+  picture = ["dots", "t"]
+
+[[topic]]
+id       = "k_sub"
+label    = "Taking away within 10"
+standard = "K.OA.A.2"
+tip      = "Start at the big number. Count back on your fingers."
+
+  [[topic.question]]
+  vars    = { a = "randint(2, [4, 6, 8, 10, 10][L - 1])", b = "randint(1, [2, 3, 5, 9, 9][L - 1])" }
+  where   = "b < a"
+  text    = "{a} − {b} = ?"
+  answer  = "a - b"
+  hint    = "Start at {a}. Count back {b}."
+  explain = "{a} − {b} = {answer}."
+  picture = ["dots", "a"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(2, [4, 6, 8, 10, 10][L - 1])", b = "randint(1, [2, 3, 5, 9, 9][L - 1])", what = "choice(['birds', 'frogs', 'ducks', 'bees'])" }
+  where   = "b < a"
+  text    = "{a} {what}. {b} fly away. How many are left?"
+  answer  = "a - b"
+  hint    = "Take {b} away from {a}."
+  explain = "{a} − {b} = {answer} {what} left."
+  picture = ["dots", "a"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(3, 10)", b = "randint(1, 7)", who = "name()", what = "item()" }
+  where   = "b < a"
+  text    = "{who} has {a} {what}. Gives away {b}. How many left?"
+  answer  = "a - b"
+  hint    = "Count back {b} from {a}."
+  explain = "{a} − {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [5]
+  vars    = { a = "randint(4, 10)", b = "randint(1, 6)" }
+  where   = "b < a"
+  text    = "{a} − ? = {a - b}"
+  answer  = "b"
+  hint    = "How far is it from {a - b} up to {a}?"
+  explain = "{a} − {answer} = {a - b}."
+
+[[topic]]
+id       = "k_shapes"
+label    = "Shapes"
+standard = "K.G.A.2"
+tip      = "Count the straight sides with your finger. A corner is where two sides meet."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { pool = "['circle', 'triangle', 'square', 'rectangle', 'hexagon'][:2 + L]", s = "choice(pool)", others = "sample(pool, 2)" }
+  where   = "s not in others"
+  text    = "What shape is this?"
+  answer  = "s"
+  choices = ["s", "others[0]", "others[1]"]
+  hint    = "Count the sides. A circle has no sides."
+  explain = "It is a {s}."
+  picture = ["shape", "s"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { s = "choice(['triangle', 'square', 'rectangle', 'pentagon', 'hexagon'][:1 + L])", n = "[3, 4, 4, 5, 6][index(['triangle', 'square', 'rectangle', 'pentagon', 'hexagon'], s)]" }
+  text    = "How many sides does this shape have?"
+  answer  = "n"
+  hint    = "Trace each straight side with your finger."
+  explain = "A {s} has {n} sides."
+  picture = ["shape", "s"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { s = "choice(['triangle', 'square', 'rectangle', 'pentagon', 'hexagon'])", n = "[3, 4, 4, 5, 6][index(['triangle', 'square', 'rectangle', 'pentagon', 'hexagon'], s)]" }
+  text    = "How many corners does this shape have?"
+  answer  = "n"
+  hint    = "A corner is a pointy place. Count them."
+  explain = "A {s} has {n} corners."
+  picture = ["shape", "s"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { s = "choice(['circle', 'triangle', 'square', 'cube', 'sphere', 'cone', 'cylinder'])", flat = "s in ['circle', 'triangle', 'square']" }
+  text    = "Is this shape flat or solid?"
+  answer  = "'flat' if flat else 'solid'"
+  choices = ["'flat'", "'solid'"]
+  shuffle = false
+  hint    = "A flat shape lies on paper. A solid shape you can hold."
+  explain = "A {s} is {answer}."
+  picture = ["shape", "s"]
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { s = "choice(['cube', 'sphere', 'cone', 'cylinder'])", others = "sample(['cube', 'sphere', 'cone', 'cylinder'], 3)" }
+  where   = "s not in others"
+  text    = "What is this solid shape called?"
+  answer  = "s"
+  choices = ["s", "others[0]", "others[1]"]
+  hint    = "A ball is a sphere. A box is a cube. A can is a cylinder."
+  explain = "It is a {s}."
+  picture = ["shape", "s"]
+
+[[topic]]
+id       = "k_measure"
+label    = "Longer and heavier"
+standard = "K.MD.A.2"
+tip      = "Picture both things side by side. Which one would stick out? Which one would be harder to lift?"
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { p = "choice([['a bus', 'a bike'], ['a train', 'a car'], ['a snake', 'a worm'], ['a river', 'a puddle'], ['a ladder', 'a spoon'], ['a giraffe', 'a cat'], ['a rope', 'a pencil'], ['a slide', 'a shoe']])", flip = "coin()" }
+  text    = "Which is longer: {p[0] if not flip else p[1]} or {p[1] if not flip else p[0]}?"
+  answer  = "p[0]"
+  choices = ["p[0] if not flip else p[1]", "p[1] if not flip else p[0]"]
+  shuffle = false
+  hint    = "Which one would stick out past the other?"
+  explain = "{p[0]} is longer than {p[1]}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { p = "choice([['an elephant', 'a mouse'], ['a car', 'a ball'], ['a rock', 'a feather'], ['a cow', 'a hen'], ['a bed', 'a pillow'], ['a tree', 'a leaf'], ['a horse', 'a bug']])", flip = "coin()" }
+  text    = "Which is heavier: {p[0] if not flip else p[1]} or {p[1] if not flip else p[0]}?"
+  answer  = "p[0]"
+  choices = ["p[0] if not flip else p[1]", "p[1] if not flip else p[0]"]
+  shuffle = false
+  hint    = "Which one would be harder to lift?"
+  explain = "{p[0]} is heavier than {p[1]}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { p = "choice([['a bus', 'a bike'], ['a tree', 'a flower'], ['a tower', 'a house'], ['a giraffe', 'a dog']])", flip = "coin()" }
+  text    = "Which is shorter: {p[0] if not flip else p[1]} or {p[1] if not flip else p[0]}?"
+  answer  = "p[1]"
+  choices = ["p[0] if not flip else p[1]", "p[1] if not flip else p[0]"]
+  shuffle = false
+  hint    = "Shorter means smaller from end to end."
+  explain = "{p[1]} is shorter than {p[0]}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(2, 9)", b = "randint(2, 9)", things = "choice([['pencil', 'crayon'], ['ribbon', 'string'], ['stick', 'straw']])" }
+  where   = "a > b"
+  text    = "{things[0]}: {a} cubes. {things[1]}: {b} cubes. How many cubes longer?"
+  answer  = "a - b"
+  hint    = "Count up from {b} to {a}."
+  explain = "{a} − {b} = {answer} cubes."
+
+[[topic]]
+id       = "k_teens"
+label    = "Teen numbers"
+standard = "K.NBT.A.1"
+tip      = "A teen number is 10 and some more. 14 is 10 and 4."
+
+  [[topic.question]]
+  vars    = { b = "randint(1, 9)" }
+  text    = "10 + {b} = ?"
+  answer  = "10 + b"
+  hint    = "Ten and {b} more."
+  explain = "10 + {b} = {answer}."
+  picture = ["dots", "10 + b"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { n = "randint(11, 19)" }
+  text    = "{n} is 10 and how many more?"
+  answer  = "n - 10"
+  hint    = "Count on from 10 to {n}."
+  explain = "10 + {answer} = {n}."
+  picture = ["dots", "n"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { b = "randint(1, 9)" }
+  text    = "1 ten and {b} ones. What number?"
+  answer  = "10 + b"
+  hint    = "1 ten is 10. Add the ones."
+  explain = "10 + {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { n = "randint(11, 19)" }
+  text    = "How many dots? Count 10 red, then the blue ones."
+  answer  = "n"
+  hint    = "10 red dots, then count on with the blue dots."
+  explain = "10 + {n - 10} = {n}."
+  picture = ["dots", "n"]
+
+  [[topic.question]]
+  levels  = [5]
+  vars    = { n = "randint(11, 19)" }
+  text    = "{n} = 10 + ?"
+  answer  = "n - 10"
+  hint    = "Take the ten away. What is left?"
+  explain = "{n} = 10 + {answer}."

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 import config
 import curriculum
+import questions
 import story
 import tasks
 from curriculum import show_answer
@@ -51,6 +52,12 @@ def _value(digits: str) -> int:
     return v
 
 
+def _check(v: int, grade: str) -> int:
+    """Check value of a v2 code. The grade letter is mixed in, so a typo in the
+    first character is caught too instead of opening another grade."""
+    return (v * 7 + curriculum.GRADE_ORDER.index(str(grade).upper()) + 1) % _CHECK
+
+
 def encode_code(grade: str, gems: list, levels: list, xp: int, beats: int) -> str:
     """Hero code v2: the grade, then base-32 digits holding (high to low) the
     gems (6 bits), one level per topic in file order (3 bits each), XP (17
@@ -66,7 +73,7 @@ def encode_code(grade: str, gems: list, levels: list, xp: int, beats: int) -> st
     v = (v << _XP_BITS) | max(0, min(int(xp), 2 ** _XP_BITS - 1))
     v = (v << 2) | max(0, min(int(beats), 3))
     v = (v << _TOPIC_BITS) | len(levels)
-    v = v * 16384 + v % _CHECK
+    v = v * 16384 + _check(v, grade)
     bits = len(gems) + 3 * len(levels) + _XP_BITS + 2 + _TOPIC_BITS + 14
     n = max(_V2_MIN_DIGITS, -(-bits // 5))
     n = -(-(n + 1) // 4) * 4 - 1          # grade + digits is a multiple of 4
@@ -86,7 +93,7 @@ def decode_code(code: str):
         return None
     v = _value(digits)
     check, v = v % 16384, v // 16384
-    if v % _CHECK != check:
+    if _check(v, grade) != check:
         return None
     count = v & (2 ** _TOPIC_BITS - 1)
     v >>= _TOPIC_BITS
@@ -108,7 +115,7 @@ def decode_code(code: str):
 
 
 def _decode_v1(text: str):
-    content = curriculum.grade("4")
+    """The old code: always the original seven 4th-grade topics and six gems."""
     v = _value(text)
     check, v = v % 16384, v // 16384
     if v % _CHECK != check:
@@ -118,11 +125,11 @@ def _decode_v1(text: str):
     xp = v & (2 ** _XP_BITS - 1)
     v >>= _XP_BITS
     levels = []
-    for _ in content.topics:
+    for _ in questions.ALL_TOPICS:
         levels.insert(0, v & 7)
         v >>= 3
     gems = []
-    for _ in content.regions:
+    for _ in curriculum.REGION_KEYS:
         gems.insert(0, bool(v & 1))
         v >>= 1
     if v or any(not 1 <= x <= 5 for x in levels):

@@ -41,7 +41,7 @@ code remembers its grade, and the side panel has **Change grade** (starts a
 new hero in the new grade; the old code stays valid).
 
 Each child's browser is its own separate game. There are no accounts. Progress
-is kept in a short **hero code** (like `400R-6J8N-80NJ-KXFQ`) that holds the
+is kept in a short **hero code** (like `400R-6J8N-80NJ-KYEN`) that holds the
 grade, the gems won, the level of every skill and the XP:
 
 - The code is shown on the map and in the side panel. The child writes it down

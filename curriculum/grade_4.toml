@@ -16,7 +16,7 @@ title = "The Number Thief of Arithmos"
 key    = "village"
 name   = "Market Village"
 gem    = "Gem of Sums"
-topics = ["addition", "subtraction"]
+topics = ["addition", "subtraction", "g4_place"]
 task   = "coins"
 task_topic = "addition"
 
@@ -24,7 +24,7 @@ task_topic = "addition"
 key    = "mines"
 name   = "Multiplication Mines"
 gem    = "Gem of Times"
-topics = ["multiplication"]
+topics = ["multiplication", "g4_factors"]
 task   = "multiples"
 task_topic = "multiplication"
   [[region.encounter]]
@@ -35,7 +35,7 @@ task_topic = "multiplication"
 key    = "docks"
 name   = "Division Docks"
 gem    = "Gem of Shares"
-topics = ["division"]
+topics = ["division", "g4_convert"]
 task   = "share"
 task_topic = "division"
   [[region.encounter]]
@@ -52,7 +52,7 @@ task_topic = "division"
 key    = "forest"
 name   = "Fraction Forest"
 gem    = "Gem of Parts"
-topics = ["fractions"]
+topics = ["fractions", "g4_decimals"]
 task   = "shade"
 task_topic = "fractions"
   [[region.encounter]]
@@ -66,7 +66,7 @@ task_topic = "fractions"
 key    = "castle"
 name   = "Castle Builders"
 gem    = "Gem of Measures"
-topics = ["area_perimeter"]
+topics = ["area_perimeter", "g4_angles", "g4_lines"]
 task   = "garden"
 task_topic = "area_perimeter"
 
@@ -127,3 +127,461 @@ id       = "two_step"
 standard = "4.OA.A.3"
   [[topic.question]]
   generator = "two_step"
+
+# ---------------------------------------------------------------------------
+# Topics added after the original seven (template questions). Keep adding at
+# the END only.
+# ---------------------------------------------------------------------------
+[[topic]]
+id       = "g4_place"
+label    = "Place value and rounding"
+standard = "4.NBT.A.1-3"
+tip      = "Each place is worth 10 times the place to its right. To round, look at the digit just right of the place: 5 or more rounds up."
+
+  [[topic.question]]
+  vars    = { n = "randint(1000, [9999, 99999, 999999, 999999, 999999][L - 1])", p = "choice([1, 10, 100, 1000, 10000, 100000][:len(plain(n))])" }
+  where   = "digit(n, p) != 0 and different(list(plain(n)))"
+  text    = "What is the value of the digit {digit(n, p)} in {n}?"
+  answer  = "digit(n, p) * p"
+  hint    = "Which place is it in? Ones, tens, hundreds, thousands..."
+  explain = "{expanded(n)}: the {digit(n, p)} is worth {answer}."
+
+  [[topic.question]]
+  vars    = { p = "choice([10, 100, 1000, 10000][:min(L, 4)])", n = "randint(p + 1, [9999, 99999, 999999, 999999, 999999][L - 1])" }
+  where   = "n % p != 0"
+  text    = "Round {n} to the nearest {p}."
+  answer  = "round_to(n, p)"
+  hint    = "Look at the digit to the right of the {p} place: {digit(n, p // 10)}."
+  explain = "{n} is between {n - n % p} and {n - n % p + p}. The next digit is {digit(n, p // 10)}, so it rounds to {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { n = "randint(1000, [9999, 99999, 99999, 999999, 999999][L - 1])" }
+  where   = "n % 10 != 0"
+  text    = "{expanded(n)} = ?"
+  answer  = "n"
+  hint    = "Put the parts together, biggest first."
+  explain = "{expanded(n)} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1000, 999999)", b = "randint(1000, 999999) if L <= 2 else a + choice([-1000, -100, -10, -1, 0, 1, 10, 100, 1000])" }
+  where   = "1000 <= b <= 999999"
+  text    = "{a} ? {b}   Which sign goes in the middle?"
+  answer  = "compare(a, b)"
+  choices = ["'<'", "'>'", "'='"]
+  shuffle = false
+  hint    = "Count the digits first. Same number of digits? Compare from the left."
+  explain = "{a} {answer} {b}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(1001, 99999)" }
+  text    = "Write {n|word} in digits."
+  answer  = "n"
+  hint    = "Thousands first, then the rest."
+  explain = "{n|word} is {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { d = "randint(1, 9)", e1 = "randint(1, 5)", e2 = "randint(0, e1 - 1)", n = "d * 10 ** e1 + d * 10 ** e2" }
+  text    = "In {n}, the {d} on the left is worth how many times the {d} on the right?"
+  answer  = "10 ** (e1 - e2)"
+  hint    = "Each place to the left is 10 times bigger."
+  explain = "{d * 10 ** e1} ÷ {d * 10 ** e2} = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(1001, 999999)", p = "choice([1000, 10000, 100000][:L - 2])" }
+  where   = "n % p != 0 and n > p"
+  text    = "A city has {n} people. Round that to the nearest {p}."
+  answer  = "round_to(n, p)"
+  hint    = "Look at the digit to the right of the {p} place."
+  explain = "{n} rounds to {answer}."
+
+[[topic]]
+id       = "g4_factors"
+label    = "Factors, multiples and primes"
+standard = "4.OA.B.4"
+tip      = "Factors divide a number with nothing left over. A prime has exactly two factors: 1 and itself."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { n = "randint(2, [20, 30, 50, 100, 100][L - 1])" }
+  text    = "Is {n} prime or composite?"
+  answer  = "'prime' if is_prime(n) else 'composite'"
+  choices = ["'prime'", "'composite'"]
+  shuffle = false
+  hint    = "Can you divide {n} by 2, 3, 5 or 7 with nothing left?"
+  explain = "The factors of {n} are {join(factors(n))}, so it is {answer}."
+
+  [[topic.question]]
+  vars    = { n = "randint(2, [12, 20, 30, 50, 100][L - 1])" }
+  text    = "How many factors does {n} have?"
+  answer  = "len(factors(n))"
+  hint    = "Try 1, 2, 3... Which numbers divide {n} exactly? Count 1 and {n} too."
+  explain = "The factors of {n} are {join(factors(n))}: {answer} of them."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { n = "randint(6, [20, 30, 60, 100, 100][L - 1])", f = "choice(factors(n)[1:])", x = "randint(2, n)", y = "randint(2, n)" }
+  where   = "not is_prime(n) and n % x != 0 and n % y != 0 and x != y"
+  text    = "Which number is a factor of {n}?"
+  answer  = "f"
+  choices = ["f", "x", "y"]
+  hint    = "A factor divides {n} with nothing left over."
+  explain = "{n} ÷ {f} = {n // f}. The factors of {n} are {join(factors(n))}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { n = "randint(2, [5, 9, 12, 12, 12][L - 1])", m = "n * randint(2, 9)", x = "randint(2, 100)", y = "randint(2, 100)" }
+  where   = "x % n != 0 and y % n != 0 and x != y"
+  text    = "Which number is a multiple of {n}?"
+  answer  = "m"
+  choices = ["m", "x", "y"]
+  hint    = "Count by {n}s."
+  explain = "{n} × {m // n} = {m}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { n = "randint(2, 12)", m = "randint(10, 100)" }
+  text    = "Is {m} a multiple of {n}?"
+  answer  = "yesno(m % n == 0)"
+  choices = ["'Yes'", "'No'"]
+  shuffle = false
+  hint    = "Divide {m} by {n}. Is there a remainder?"
+  explain = "{m} ÷ {n} = {m // n}{' with no remainder' if m % n == 0 else ' remainder ' + str(m % n)}, so {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(2, 12)" }
+  text    = "Multiples of {n}: {n}, {2 * n}, {3 * n}, ?"
+  answer  = "4 * n"
+  hint    = "Add {n} to {3 * n}."
+  explain = "{3 * n} + {n} = {answer}, which is 4 × {n}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { n = "randint(4, 60)" }
+  where   = "not is_prime(n)"
+  text    = "What is the greatest factor of {n} other than {n} itself?"
+  answer  = "factors(n)[-2]"
+  hint    = "Divide {n} by its smallest factor above 1."
+  explain = "The factors of {n} are {join(factors(n))}. The greatest below {n} is {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { n = "randint(6, 60)", fs = "factors(n)", i = "randint(1, max(1, len(fs) - 2))" }
+  where   = "not is_prime(n)"
+  text    = "The factors of {n} are {join(fs[:i] + fs[i + 1:])} and one more. Which one is missing?"
+  answer  = "fs[i]"
+  hint    = "Pair them up: each factor times another gives {n}."
+  explain = "All the factors of {n}: {join(fs)}. The missing one is {answer}."
+
+[[topic]]
+id       = "g4_decimals"
+label    = "Decimals: tenths and hundredths"
+standard = "4.NF.C.5-7"
+tip      = "0.62 means 62 hundredths, or 62/100. To compare decimals, line up the decimal points."
+
+  [[topic.question]]
+  kind    = "decimal"
+  vars    = { p = "10 if L == 1 else choice([10, 100])", k = "randint(1, p - 1)" }
+  text    = "Write {k}/{p} as a decimal."
+  answer  = "k / p"
+  hint    = "{'Tenths have one digit after the point.' if p == 10 else 'Hundredths have two digits after the point.'}"
+  explain = "{k}/{p} = {answer|dec}."
+
+  [[topic.question]]
+  vars    = { p = "10 if L == 1 else 100", k = "randint(1, p - 1)" }
+  text    = "{k / p|dec} = ?/{p}"
+  answer  = "k"
+  hint    = "{'One digit after the point means tenths.' if p == 10 else 'Two digits after the point mean hundredths.'}"
+  explain = "{k / p|dec} = {answer}/{p}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1, 99) / 100 if L <= 2 else randint(1, 9) / 10", b = "randint(1, 99) / 100" }
+  text    = "{a|dec} ? {b|dec}   Which sign goes in the middle?"
+  answer  = "compare(a, b)"
+  choices = ["'<'", "'>'", "'='"]
+  shuffle = false
+  hint    = "Write both as hundredths: {a * 100}/100 and {b * 100}/100."
+  explain = "{a|dec} {answer} {b|dec}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "decimal"
+  vars    = { a = "randint(1, 9)", b = "randint(1, 9)" }
+  text    = "{a}/10 + {b}/100 = ? (write a decimal)"
+  answer  = "a / 10 + b / 100"
+  hint    = "{a}/10 is {a * 10}/100."
+  explain = "{a * 10}/100 + {b}/100 = {a * 10 + b}/100 = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "decimal"
+  vars    = { hi = "1 if L == 3 else 2", k = "randint(1, 10 * hi - 1)" }
+  where   = "k % 10 != 0"
+  text    = "The line is cut into tenths. What decimal is at the point?"
+  answer  = "k / 10"
+  hint    = "Count the small parts from 0. Each one is one tenth."
+  explain = "{k} tenths is {answer|dec}."
+  picture = ["number_line", "0", "hi", "k / 10", "10"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "fraction"
+  vars    = { k = "randint(1, 99)" }
+  where   = "gcd(k, 100) > 1"
+  text    = "Write {k / 100|dec} as a fraction in simplest form."
+  answer  = "k / 100"
+  hint    = "{k / 100|dec} = {k}/100. Then divide top and bottom by {gcd(k, 100)}."
+  explain = "{k}/100 = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1, 9)" }
+  text    = "Which decimal is the same as {a}/10?"
+  answer  = "dec_text(a / 10)"
+  choices = ["dec_text(a / 10)", "dec_text(a / 100)", "dec_text(a + 1 / 10)"]
+  hint    = "Tenths: one digit after the point."
+  explain = "{a}/10 = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "decimal"
+  vars    = { a = "randint(100, 999) / 100", b = "randint(5, 300) / 100", who = "name()" }
+  text    = "{who} has {a|money} and finds {b|money} more. How much money now?"
+  answer  = "a + b"
+  hint    = "Line up the decimal points and add."
+  explain = "{a|money} + {b|money} = {answer|money}."
+
+[[topic]]
+id       = "g4_convert"
+label    = "Measurement conversions"
+standard = "4.MD.A.1-2"
+tip      = "1 foot = 12 inches, 1 yard = 3 feet, 1 kilogram = 1,000 grams, 1 hour = 60 minutes. Bigger unit to smaller: multiply."
+
+  [[topic.question]]
+  vars    = { pairs = "[['feet', 'inches', 12], ['yards', 'feet', 3], ['hours', 'minutes', 60], ['meters', 'centimeters', 100], ['kilograms', 'grams', 1000], ['kilometers', 'meters', 1000], ['pounds', 'ounces', 16], ['minutes', 'seconds', 60]]", p = "choice(pairs[:4] if L == 1 else pairs)", a = "randint(1, [5, 9, 12, 20, 50][L - 1])" }
+  text    = "{a} {p[0]} = ? {p[1]}"
+  answer  = "a * p[2]"
+  hint    = "1 of {p[0]} is {p[2]} {p[1]}. Multiply."
+  explain = "{a} × {p[2]} = {answer} {p[1]}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(3, 6)", b = "randint(1, 11)", who = "name()" }
+  text    = "{who} is {a} feet {b} inches tall. How many inches is that?"
+  answer  = "12 * a + b"
+  hint    = "{a} feet is {12 * a} inches. Then add {b}."
+  explain = "{a} × 12 = {12 * a}, and {12 * a} + {b} = {answer} inches."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(1, 5)", b = "randint(1, 59)" }
+  text    = "{a} {'hour' if a == 1 else 'hours'} {b} minutes = ? minutes"
+  answer  = "60 * a + b"
+  hint    = "Each hour is 60 minutes."
+  explain = "{a} × 60 = {60 * a}, and {60 * a} + {b} = {answer} minutes."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { pairs = "[['feet', 'inches', 12], ['yards', 'feet', 3], ['hours', 'minutes', 60], ['meters', 'centimeters', 100], ['kilograms', 'grams', 1000], ['kilometers', 'meters', 1000], ['pounds', 'ounces', 16]]", p = "choice(pairs)", a = "randint(2, 12)" }
+  text    = "{a * p[2]} {p[1]} = ? {p[0]}"
+  answer  = "a"
+  hint    = "How many groups of {p[2]} {p[1]} are in {a * p[2]}?"
+  explain = "{a * p[2]} ÷ {p[2]} = {answer} {p[0]}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { a = "randint(2, 9)", b = "randint(2, 9)" }
+  text    = "A rope is {a} meters and {b} centimeters long. How many centimeters is that?"
+  answer  = "100 * a + b"
+  hint    = "Each meter is 100 centimeters."
+  explain = "{a} × 100 + {b} = {answer} cm."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(2, 10)", b = "randint(100, 999)", who = "name()" }
+  text    = "A race is {a} kilometers long. {who} has run {b} meters. How many meters are left?"
+  answer  = "1000 * a - b"
+  hint    = "{a} km is {1000 * a} m."
+  explain = "{1000 * a} − {b} = {answer} meters."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "decimal"
+  vars    = { a = "randint(100, 1500) / 100", b = "randint(200, 2500) / 100", who = "name()" }
+  where   = "b > a"
+  text    = "{who} has {a|money}. A kite costs {b|money}. How much more money is needed?"
+  answer  = "b - a"
+  hint    = "Subtract: {b|money} − {a|money}."
+  explain = "{b|money} − {a|money} = {answer|money}."
+
+[[topic]]
+id       = "g4_angles"
+label    = "Angles"
+standard = "4.MD.C.5-7"
+tip      = "A right angle is 90°. A straight line is 180°. Angles that share a side add up."
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { deg = "choice([30, 45, 60, 90, 120, 135, 150])" }
+  text    = "Is this angle acute, right or obtuse?"
+  answer  = "'acute' if deg < 90 else 'right' if deg == 90 else 'obtuse'"
+  choices = ["'acute'", "'right'", "'obtuse'"]
+  shuffle = false
+  hint    = "Compare it to a square corner (90°)."
+  explain = "It is {deg}°, so it is {answer}."
+  picture = ["angle", "deg"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randstep(10, 170, [10, 10, 5, 1, 1][L - 1])" }
+  text    = "Two angles make a straight line. One is {a}°. What is the other?"
+  answer  = "180 - a"
+  hint    = "A straight line is 180°."
+  explain = "180 − {a} = {answer}°."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randstep(10, 80, [10, 10, 5, 1, 1][L - 1])" }
+  text    = "Two angles make a right angle. One is {a}°. What is the other?"
+  answer  = "90 - a"
+  hint    = "A right angle is 90°."
+  explain = "90 − {a} = {answer}°."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randstep(10, 90, 5)", b = "randstep(10, 90, 5)" }
+  text    = "An angle of {a}° and an angle of {b}° share a side. How big is the whole angle?"
+  answer  = "a + b"
+  hint    = "Add the two angles."
+  explain = "{a} + {b} = {answer}°."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { deg = "choice([20, 40, 60, 90, 110, 130, 150])" }
+  text    = "About how many degrees is this angle?"
+  answer  = "deg"
+  choices = ["deg", "deg + 45 if deg <= 135 else deg - 45", "deg - 20 if deg >= 40 else deg + 20"]
+  hint    = "Is it less or more than a right angle (90°)? Half a right angle is 45°."
+  explain = "The angle is {deg}°."
+  picture = ["angle", "deg"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(1, 4)" }
+  text    = "{n} right {'angle' if n == 1 else 'angles'} together make how many degrees?"
+  answer  = "90 * n"
+  hint    = "Each right angle is 90°."
+  explain = "{n} × 90 = {answer}°."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randstep(40, 170, 5)", b = "randstep(10, 150, 5)" }
+  where   = "b < a"
+  text    = "A {a}° angle is split into two angles. One is {b}°. What is the other?"
+  answer  = "a - b"
+  hint    = "Subtract: {a} − {b}."
+  explain = "{a} − {b} = {answer}°."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { h = "randint(1, 6)" }
+  text    = "At {h}:00, how many degrees are between the two clock hands?"
+  answer  = "30 * h"
+  hint    = "A full turn is 360°, and there are 12 hours: 30° per hour."
+  explain = "{h} × 30 = {answer}°."
+  picture = ["clock", "h", "0"]
+
+[[topic]]
+id       = "g4_lines"
+label    = "Lines and symmetry"
+standard = "4.G.A.1-3"
+tip      = "Parallel lines never meet, like train tracks. Perpendicular lines make a square corner. A line of symmetry folds a shape onto itself."
+
+  [[topic.question]]
+  vars    = { pool = "[['square', 4], ['rectangle', 2], ['oval', 2], ['rhombus', 2], ['pentagon', 5], ['hexagon', 6], ['parallelogram', 0]]", p = "choice(pool[:3] if L == 1 else pool)" }
+  text    = "How many lines of symmetry does this {p[0]} have?"
+  answer  = "p[1]"
+  hint    = "Where could you fold it so both halves match exactly?"
+  explain = "A {p[0]} has {answer} {'line' if p[1] == 1 else 'lines'} of symmetry."
+  picture = ["shape", "p[0]"]
+
+  [[topic.question]]
+  kind    = "choice"
+  vars    = { p = "choice([['never meet and stay the same distance apart', 'parallel'], ['cross and make square corners', 'perpendicular'], ['cross at a point but not at a square corner', 'intersecting']])" }
+  text    = "Two lines {p[0]}. What are they called?"
+  answer  = "p[1]"
+  choices = ["'parallel'", "'perpendicular'", "'intersecting'"]
+  shuffle = false
+  hint    = "Parallel: train tracks. Perpendicular: a plus sign."
+  explain = "Lines that {p[0]} are {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { p = "choice([['square', 2], ['rectangle', 2], ['parallelogram', 2], ['rhombus', 2], ['trapezoid', 1], ['triangle', 0], ['hexagon', 3]])" }
+  text    = "How many pairs of parallel sides does this {p[0]} have?"
+  answer  = "p[1]"
+  hint    = "Parallel sides would never meet, even if you made them longer."
+  explain = "A {p[0]} has {answer} {'pair' if p[1] == 1 else 'pairs'} of parallel sides."
+  picture = ["shape", "p[0]"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { p = "choice([['square', True], ['rectangle', True], ['rhombus', False], ['parallelogram', False], ['circle', False], ['triangle', False], ['hexagon', False]])" }
+  text    = "Does this {p[0]} have a right angle?"
+  answer  = "yesno(p[1])"
+  choices = ["'Yes'", "'No'"]
+  shuffle = false
+  hint    = "A right angle is a square corner."
+  explain = "A {p[0]} {'has' if p[1] else 'has no'} right {'angles' if p[1] else 'angle'}: {answer}."
+  picture = ["shape", "p[0]"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { s = "choice(['A', 'H', 'I', 'M', 'O', 'T', 'U', 'V', 'W', 'X', 'Y'])", others = "sample(['B', 'C', 'D', 'E', 'F', 'G', 'J', 'K', 'L', 'N', 'P', 'Q', 'R', 'S', 'Z'], 2)" }
+  text    = "Which letter has a vertical line of symmetry (a fold line from top to bottom)?"
+  answer  = "s"
+  choices = ["s", "others[0]", "others[1]"]
+  hint    = "Picture folding the letter in half from top to bottom. Do the sides match?"
+  explain = "{s} folds onto itself. {others[0]} and {others[1]} do not."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { p = "choice([['square', 4], ['rectangle', 4], ['rhombus', 0], ['parallelogram', 0], ['pentagon', 0], ['hexagon', 0], ['trapezoid', 0]])" }
+  text    = "How many right angles does this {p[0]} have?"
+  answer  = "p[1]"
+  hint    = "Look for square corners."
+  explain = "A {p[0]} has {answer} right {'angle' if p[1] == 1 else 'angles'}."
+  picture = ["shape", "p[0]"]
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { others = "sample(['square', 'rectangle', 'triangle', 'hexagon', 'rhombus'], 2)" }
+  text    = "Which shape has exactly one pair of parallel sides?"
+  answer  = "'trapezoid'"
+  choices = ["'trapezoid'", "others[0]", "others[1]"]
+  hint    = "The others have no parallel sides, or two pairs."
+  explain = "A trapezoid has exactly one pair of parallel sides."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { n = "randint(3, 8)" }
+  text    = "A regular polygon has {n} equal sides. How many lines of symmetry does it have?"
+  answer  = "n"
+  hint    = "A regular shape has one line of symmetry for every side."
+  explain = "A regular {n}-sided shape has {answer} lines of symmetry."

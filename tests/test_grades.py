@@ -128,11 +128,14 @@ def test_old_12_character_codes_still_load_as_4th_grade():
     g = Game.from_code("Zed", OLD_CODE)
     assert g is not None and g.grade == "4"
     assert g.done == {"village", "mines"} and g.xp == 345 and g.beats_seen == 1
-    assert g.tiers == {"addition": 3, "subtraction": 2, "multiplication": 2,
-                       "division": 2, "fractions": 1, "area_perimeter": 2, "two_step": 5}
+    old = {"addition": 3, "subtraction": 2, "multiplication": 2,
+           "division": 2, "fractions": 1, "area_perimeter": 2, "two_step": 5}
+    assert {t: g.tiers[t] for t in old} == old
+    # topics added to 4th grade later start at the start level
+    assert all(g.tiers[t] == config.START_TIER for t in g.tiers if t not in old)
     assert Game.from_code("Zed", OLD_CODE.lower().replace("-", "")).xp == 345
     # once saved again it becomes a v2 code with the grade in front
-    assert g.to_code().startswith("4") and len(g.to_code()) == 19
+    assert g.to_code().startswith("4") and len(g.to_code()) % 5 == 4
     assert Game.from_code("Zed", g.to_code()).tiers == g.tiers
 
 
@@ -159,15 +162,23 @@ def test_codes_round_trip_in_every_grade(grade):
 def test_adding_a_topic_at_the_end_keeps_old_codes_valid():
     topics = list(curriculum.grade("4").topics)
     gems = [True, False, True, False, False, False]
-    short = encode_code("4", gems, [5, 4, 3, 2, 1], 999, 3)     # only 5 of the 7 topics
+    short = encode_code("4", gems, [5, 4, 3, 2, 1], 999, 3)     # only the first 5 topics
     assert decode_code(short) == ("4", gems, [5, 4, 3, 2, 1], 999, 3)
     g = Game.from_code("Gil", short)
-    assert [g.tiers[t] for t in topics] == [5, 4, 3, 2, 1, config.START_TIER, config.START_TIER]
+    assert [g.tiers[t] for t in topics] == [5, 4, 3, 2, 1] + [config.START_TIER] * (len(topics) - 5)
     assert g.done == {"village", "docks"} and g.xp == 999
     # more levels than topics (a topic was deleted, against the rules): the extras are dropped
-    long = encode_code("4", gems, [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2], 5, 0)
-    assert [Game.from_code("Gil", long).tiers[t] for t in topics] == [1, 2, 3, 4, 5, 1, 2]
-    assert len(long.replace("-", "")) == 20 and len(short.replace("-", "")) == 16
+    levels = [1, 2, 3, 4, 5] * 4
+    long = encode_code("4", gems, levels, 5, 0)
+    assert [Game.from_code("Gil", long).tiers[t] for t in topics] == levels[:len(topics)]
+    assert len(long.replace("-", "")) == 24 and len(short.replace("-", "")) == 16
+
+
+def test_a_typo_in_the_grade_letter_is_caught():
+    code = Game("Ivy", "4", seed=1).to_code()
+    for other in curriculum.load_all():
+        if other != "4":
+            assert Game.from_code("x", other + code[1:]) is None
 
 
 def test_bad_codes_are_rejected_not_crashed():

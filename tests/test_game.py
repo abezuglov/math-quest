@@ -132,7 +132,9 @@ def test_perfect_player_wins_and_climbs_tiers():
     play(g, right)
     assert g.phase == "victory" and g.defeats == 0 and g.hp > 0
     assert all(s[0] == s[1] for s in g.stats.values())
-    assert max(g.best_tiers.values()) == config.MAX_TIER
+    # one pass through the story spreads the answers over every topic, so the
+    # busiest topics climb at least two levels above the start
+    assert max(g.best_tiers.values()) >= min(config.MAX_TIER, config.START_TIER + 2)
     assert g.xp > 2000
     assert g.all_done and g.beats_seen == len(story.BEATS)
 
@@ -359,7 +361,8 @@ def test_hero_code_brings_back_gems_levels_and_xp():
         while g.phase == "story":
             g.continue_story()
     code = g.to_code()
-    assert len(code) == 19 and code[0] == "4" and code[4] == code[9] == code[14] == "-"
+    assert code[0] == "4" and len(code) % 5 == 4
+    assert all(ch == "-" for ch in code[4::5])
     h = Game.from_code("Mia", code.lower().replace("-", " "))
     assert h is not None and h.done == g.done and h.xp == g.xp and h.tiers == g.tiers
     assert h.phase == "map" and h.beats_seen == 2      # old story pages are not replayed
@@ -411,8 +414,8 @@ def test_an_unread_story_page_and_switched_off_regions_survive_the_code(monkeypa
     play(full, right)
     code = full.to_code()
     import curriculum
-    monkeypatch.setattr(curriculum.grade("4").topics["fractions"], "enabled", False)
-    monkeypatch.setattr(curriculum.grade("4").topics["division"], "enabled", False)
+    for tid in ("fractions", "g4_decimals", "division", "g4_convert"):   # forest and docks
+        monkeypatch.setattr(curriculum.grade("4").topics[tid], "enabled", False)
     small = Game.from_code("Rae", code)
     assert len(small.regions) == 4 and small.all_done
     assert small.to_code() == code             # nothing is lost while topics are off

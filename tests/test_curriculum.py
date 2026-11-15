@@ -40,11 +40,15 @@ def test_every_grade_file_loads_with_six_regions_and_full_level_coverage():
 def test_grade_4_keeps_the_old_topics_and_regions():
     import story
     g = GRADES["4"]
-    assert list(g.topics) == ALL_TOPICS
-    assert all(t.templates[0].generator == tid for tid, t in g.topics.items())
+    # The old topics come first, in the old order (hero codes depend on it);
+    # newer topics are only ever added after them.
+    assert list(g.topics)[:len(ALL_TOPICS)] == ALL_TOPICS
+    assert all(g.topics[tid].templates[0].generator == tid for tid in ALL_TOPICS)
+    assert all(tid.startswith("g4_") for tid in list(g.topics)[len(ALL_TOPICS):])
     for mine, old in zip(g.regions, story.REGIONS):
         assert mine["key"] == old["key"] and mine["name"] == old["name"]
-        assert mine["gem"] == old["gem"] and mine["topics"] == old["topics"]
+        assert mine["gem"] == old["gem"]
+        assert mine["topics"][:len(old["topics"])] == old["topics"]
         task = next(e["task"] for e in old["encounters"] if e["kind"] == "task")
         assert mine["task"] == task
 

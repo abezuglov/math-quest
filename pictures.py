@@ -447,19 +447,301 @@ def vmul_fig(a, b, hide, pos):
 
 
 # --------------------------------------------------------------------------
+# Pictures for the younger grades (K-3) and 5th grade
+# --------------------------------------------------------------------------
+def _txt(x, y, text, size=16, anchor="middle", bold=True, color=INK):
+    weight = " font-weight='bold'" if bold else ""
+    return (f"<text x='{x:.1f}' y='{y:.1f}' text-anchor='{anchor}' {FONT} font-size='{size}'"
+            f"{weight} fill='{color}'>{text}</text>")
+
+
+def dots(n, per_row=5):
+    """Up to 20 counting dots in rows of 5 (a double ten-frame)."""
+    n = max(0, min(20, int(n)))
+    rows = max(1, -(-n // per_row))
+    step = 46
+    W, H = per_row * step + 30, rows * step + 30
+    body = _card(W, H)
+    for i in range(n):
+        x = 15 + (i % per_row) * step + step / 2
+        y = 15 + (i // per_row) * step + step / 2
+        color = "#e2544a" if i < 10 else "#3d8fd6"
+        body += f"<circle cx='{x:.1f}' cy='{y:.1f}' r='15' fill='{color}' stroke='{INK}' stroke-width='1.5'/>"
+    return _svg(W, H, body, f"{n} dots")
+
+
+def clock(h, m=0):
+    """An analog clock showing h:mm."""
+    import math
+    h, m = int(h) % 12, int(m) % 60
+    cx = cy = 100
+    body = _card(200, 200)
+    body += f"<circle cx='{cx}' cy='{cy}' r='84' fill='#fff' stroke='{INK}' stroke-width='3'/>"
+    for i in range(60):
+        a = math.radians(i * 6)
+        long = i % 5 == 0
+        r0 = 70 if long else 78
+        body += (f"<line x1='{cx + r0 * math.sin(a):.1f}' y1='{cy - r0 * math.cos(a):.1f}' "
+                 f"x2='{cx + 84 * math.sin(a):.1f}' y2='{cy - 84 * math.cos(a):.1f}' "
+                 f"stroke='{INK}' stroke-width='{2 if long else 1}'/>")
+    for i in range(1, 13):
+        a = math.radians(i * 30)
+        body += _txt(cx + 58 * math.sin(a), cy - 58 * math.cos(a) + 6, i, 16)
+    ah = math.radians((h + m / 60) * 30)
+    am = math.radians(m * 6)
+    body += (f"<line x1='{cx}' y1='{cy}' x2='{cx + 40 * math.sin(ah):.1f}' y2='{cy - 40 * math.cos(ah):.1f}' "
+             f"stroke='{INK}' stroke-width='6' stroke-linecap='round'/>"
+             f"<line x1='{cx}' y1='{cy}' x2='{cx + 64 * math.sin(am):.1f}' y2='{cy - 64 * math.cos(am):.1f}' "
+             f"stroke='#d64545' stroke-width='4' stroke-linecap='round'/>"
+             f"<circle cx='{cx}' cy='{cy}' r='5' fill='{INK}'/>")
+    return _svg(200, 200, body, f"A clock showing {h or 12}:{m:02d}")
+
+
+_COIN = {1: ("1c", "#c77d4a", 18), 5: ("5c", "#b8b8b8", 22), 10: ("10c", "#c9c9c9", 17),
+         25: ("25c", "#bdbdbd", 25), 50: ("50c", "#b5b5b5", 29)}
+
+
+def coins(values):
+    """Coins (1, 5, 10, 25, 50 cents) and bills (100 = $1, 500 = $5 ...)."""
+    values = [int(v) for v in values][:16]
+    per_row = 8
+    rows = max(1, -(-len(values) // per_row))
+    W, H = max(1, min(len(values), per_row)) * 66 + 20, rows * 66 + 20
+    body = _card(W, H)
+    for i, v in enumerate(values):
+        cx, cy = 10 + (i % per_row) * 66 + 33, 10 + (i // per_row) * 66 + 33
+        if v in _COIN:
+            label, color, r = _COIN[v]
+            body += (f"<circle cx='{cx}' cy='{cy}' r='{r}' fill='{color}' stroke='{INK}' stroke-width='2'/>"
+                     + _txt(cx, cy + 5, label, 13))
+        else:
+            body += (f"<rect x='{cx - 30}' y='{cy - 15}' width='60' height='30' rx='3' fill='#bfe3c4' "
+                     f"stroke='{INK}' stroke-width='2'/>" + _txt(cx, cy + 5, f"${v // 100}", 14))
+    return _svg(W, H, body, "Money: " + ", ".join(
+        _COIN[v][0] if v in _COIN else f"${v // 100}" for v in values))
+
+
+def number_line(lo, hi, mark=None, parts=1):
+    """A number line from lo to hi with a dot at `mark` (which may be a fraction).
+    `parts` cuts every unit into that many pieces."""
+    from fractions import Fraction
+    lo, hi, parts = int(lo), int(hi), max(1, int(parts))
+    if hi <= lo:
+        hi = lo + 1
+    span = hi - lo
+    W = 520
+    x0, x1, y = 40, W - 40, 60
+    unit = (x1 - x0) / span
+    body = _card(W, 100)
+    body += f"<line x1='{x0 - 20}' y1='{y}' x2='{x1 + 20}' y2='{y}' stroke='{INK}' stroke-width='3'/>"
+    body += (f"<path d='M{x1 + 20} {y} l-8 -6 v12 Z' fill='{INK}'/>"
+             f"<path d='M{x0 - 20} {y} l8 -6 v12 Z' fill='{INK}'/>")
+    label_every = max(1, span // 10)
+    for i in range(span * parts + 1):
+        x = x0 + i * unit / parts
+        whole = i % parts == 0
+        body += (f"<line x1='{x:.1f}' y1='{y - (12 if whole else 6)}' x2='{x:.1f}' "
+                 f"y2='{y + (12 if whole else 6)}' stroke='{INK}' stroke-width='{2 if whole else 1}'/>")
+        if whole and (i // parts) % label_every == 0:
+            body += _txt(x, y + 32, lo + i // parts, 15)
+    if mark is not None:
+        m = Fraction(mark)
+        if lo <= m <= hi:
+            x = x0 + float(m - lo) * unit
+            body += f"<circle cx='{x:.1f}' cy='{y}' r='9' fill='#e2544a' stroke='{INK}' stroke-width='2'/>"
+            body += _txt(x, y - 20, "?", 18, color="#d64545")
+    return _svg(W, 100, body, f"A number line from {lo} to {hi}"
+                + (" with a point marked" if mark is not None else ""))
+
+
+_SHAPES = {
+    "circle": "<circle cx='0' cy='0' r='60'/>",
+    "triangle": "<path d='M0 -60 L60 50 H-60 Z'/>",
+    "square": "<rect x='-55' y='-55' width='110' height='110'/>",
+    "rectangle": "<rect x='-75' y='-40' width='150' height='80'/>",
+    "pentagon": "<path d='M0 -62 L59 -19 L36 50 H-36 L-59 -19 Z'/>",
+    "hexagon": "<path d='M-30 -52 H30 L60 0 L30 52 H-30 L-60 0 Z'/>",
+    "rhombus": "<path d='M0 -60 L55 0 L0 60 L-55 0 Z'/>",
+    "trapezoid": "<path d='M-35 -45 H35 L70 45 H-70 Z'/>",
+    "parallelogram": "<path d='M-45 -45 H75 L45 45 H-75 Z'/>",
+    "oval": "<ellipse cx='0' cy='0' rx='72' ry='45'/>",
+    "cube": ("<path d='M-45 -20 H25 V50 H-45 Z'/><path d='M-45 -20 L-15 -50 H55 L25 -20 Z'/>"
+             "<path d='M25 -20 L55 -50 V20 L25 50 Z'/>"),
+    "box": ("<path d='M-60 -10 H20 V45 H-60 Z'/><path d='M-60 -10 L-30 -40 H50 L20 -10 Z'/>"
+            "<path d='M20 -10 L50 -40 V15 L20 45 Z'/>"),
+    "sphere": ("<circle cx='0' cy='0' r='58'/>"
+               "<ellipse cx='0' cy='0' rx='58' ry='18' fill='none' stroke-dasharray='4 3'/>"),
+    "cone": ("<path d='M0 -60 L55 35 A55 18 0 0 1 -55 35 Z'/>"
+             "<ellipse cx='0' cy='35' rx='55' ry='18' fill='none' stroke-dasharray='4 3'/>"),
+    "cylinder": "<path d='M-45 -40 V40 A45 15 0 0 0 45 40 V-40'/><ellipse cx='0' cy='-40' rx='45' ry='15'/>",
+    "pyramid": "<path d='M0 -60 L60 40 H-60 Z'/><path d='M0 -60 L60 40 L0 55 Z' opacity='.6'/>",
+}
+SHAPE_NAMES = list(_SHAPES)
+
+
+def shape(name):
+    """One flat or solid shape, drawn big."""
+    name = str(name).lower()
+    art = _SHAPES.get(name, _SHAPES["circle"])
+    body = _card(200, 170)
+    body += (f"<g transform='translate(100 85)' fill='#ffd86b' stroke='{INK}' stroke-width='3' "
+             f"stroke-linejoin='round'>{art}</g>")
+    return _svg(200, 170, body, "A shape")
+
+
+def parts(n, shaded=0):
+    """A rectangle cut into n equal parts, `shaded` of them colored (no labels)."""
+    n = max(1, min(16, int(n)))
+    body = _card(360, 90) + _bar(20, 20, 320, 50, int(shaded), n, "#3fa45b")
+    return _svg(360, 90, body, f"A shape cut into {n} equal parts, {shaded} shaded")
+
+
+def tally(labels, counts):
+    """Rows of tally marks, one per label."""
+    labels, counts = [str(x) for x in labels], [max(0, min(30, int(c))) for c in counts]
+    rows = min(len(labels), len(counts))
+    H = 20 + 44 * max(1, rows)
+    W = 520
+    body = _card(W, H)
+    for i in range(rows):
+        y = 20 + 44 * i
+        body += _txt(20, y + 28, labels[i], 16, anchor="start")
+        x = 160
+        for k in range(counts[i]):
+            if k % 5 == 4:
+                body += (f"<line x1='{x - 52}' y1='{y + 8}' x2='{x + 4}' y2='{y + 32}' "
+                         f"stroke='{INK}' stroke-width='3'/>")
+                x += 20
+            else:
+                body += f"<line x1='{x}' y1='{y + 6}' x2='{x}' y2='{y + 34}' stroke='{INK}' stroke-width='3'/>"
+                x += 12
+    return _svg(W, H, body, "Tally chart: " + ", ".join(f"{l} {c}" for l, c in zip(labels, counts)))
+
+
+def bar_graph(labels, counts, step=1):
+    """A bar graph with a labelled scale."""
+    labels, counts = [str(x) for x in labels], [max(0, int(c)) for c in counts]
+    n = min(len(labels), len(counts))
+    labels, counts = labels[:n], counts[:n]
+    step = max(1, int(step))
+    top = max(-(-max(counts + [1]) // step) * step, step)
+    W, H = 520, 260
+    x0, y0, plot_h = 70, 210, 170
+    body = _card(W, H)
+    body += f"<line x1='{x0}' y1='{y0}' x2='{W - 20}' y2='{y0}' stroke='{INK}' stroke-width='2'/>"
+    body += f"<line x1='{x0}' y1='{y0}' x2='{x0}' y2='{y0 - plot_h - 10}' stroke='{INK}' stroke-width='2'/>"
+    for v in range(0, top + 1, step):
+        y = y0 - v / top * plot_h
+        body += (f"<line x1='{x0 - 5}' y1='{y:.1f}' x2='{W - 20}' y2='{y:.1f}' "
+                 f"stroke='{INK}' stroke-width='.6' opacity='.4'/>")
+        body += _txt(x0 - 10, y + 5, v, 13, anchor="end", bold=False)
+    slot = (W - 40 - x0) / max(1, n)
+    colors = ["#e2544a", "#3d8fd6", "#3fa45b", "#f0a52c", "#9460d6", "#5fa4c9"]
+    for i, (label, c) in enumerate(zip(labels, counts)):
+        bw = slot * .6
+        x = x0 + 10 + i * slot + (slot - bw) / 2
+        h = c / top * plot_h
+        body += (f"<rect x='{x:.1f}' y='{y0 - h:.1f}' width='{bw:.1f}' height='{h:.1f}' "
+                 f"fill='{colors[i % 6]}' stroke='{INK}' stroke-width='1.5'/>")
+        body += _txt(x + bw / 2, y0 + 20, label, 14)
+    return _svg(W, H, body, "Bar graph: " + ", ".join(f"{l} {c}" for l, c in zip(labels, counts)))
+
+
+def picture_graph(labels, counts, each=1):
+    """A picture graph: one star for every `each` things."""
+    labels, counts = [str(x) for x in labels], [max(0, int(c)) for c in counts]
+    each = max(1, int(each))
+    rows = min(len(labels), len(counts))
+    H = 24 + 40 * max(1, rows) + 26
+    W = 520
+    body = _card(W, H)
+    for i in range(rows):
+        y = 16 + 40 * i
+        body += _txt(20, y + 26, labels[i], 16, anchor="start")
+        for k in range(min(12, counts[i] // each)):
+            cx = 160 + k * 28
+            body += (f"<path transform='translate({cx} {y + 20}) scale(1.1)' fill='#f0a52c' stroke='{INK}' "
+                     f"stroke-width='1' d='M0 -10 L3 -3 L10 -3 L4 2 L6 9 L0 5 L-6 9 L-4 2 L-10 -3 L-3 -3 Z'/>")
+    body += _txt(20, H - 8, f"Each star = {each}", 13, anchor="start", bold=False)
+    return _svg(W, H, body, "Picture graph: " + ", ".join(f"{l} {c}" for l, c in zip(labels, counts))
+                + f", each star is {each}")
+
+
+def cubes(l, w, h):
+    """A box built from unit cubes, drawn in 3-D."""
+    l, w, h = (max(1, min(8, int(v))) for v in (l, w, h))
+    s, dx, dy = 26, 12, 7
+    W = 40 + l * s + w * dx + 20
+    H = 40 + h * s + w * dy + 20
+    ox, oy = 30, H - 30
+    body = _card(W, H)
+    for z in range(h):
+        for y in range(w - 1, -1, -1):
+            for x in range(l):
+                px = ox + x * s + y * dx
+                py = oy - z * s - y * dy
+                body += (f"<rect x='{px}' y='{py - s}' width='{s}' height='{s}' fill='#ffd86b' stroke='{INK}' stroke-width='1'/>"
+                         f"<path d='M{px} {py - s} l{dx} -{dy} h{s} l-{dx} {dy} Z' fill='#f3b23b' stroke='{INK}' stroke-width='1'/>"
+                         f"<path d='M{px + s} {py - s} l{dx} -{dy} v{s} l-{dx} {dy} Z' fill='#d9932b' stroke='{INK}' stroke-width='1'/>")
+    body += _txt(ox + l * s / 2, oy + 18, f"{l}", 14)
+    body += _txt(ox + l * s + w * dx / 2 + 10, oy - w * dy / 2 + 12, f"{w}", 14, anchor="start")
+    body += _txt(ox - 12, oy - h * s / 2, f"{h}", 14, anchor="end")
+    return _svg(W, H, body, f"A box of cubes {l} long, {w} wide and {h} high")
+
+
+def grid_point(x, y, size=10):
+    """A point on a coordinate grid (first quadrant)."""
+    size = max(5, min(12, int(size)))
+    x, y = max(0, min(size, int(x))), max(0, min(size, int(y)))
+    cell = 28
+    ox, oy = 40, 20 + size * cell
+    W, H = ox + size * cell + 30, oy + 40
+    body = _card(W, H)
+    for i in range(size + 1):
+        px, py = ox + i * cell, oy - i * cell
+        body += (f"<line x1='{px}' y1='{oy}' x2='{px}' y2='{oy - size * cell}' stroke='{INK}' "
+                 f"stroke-width='{2 if i == 0 else .6}' opacity='{1 if i == 0 else .5}'/>")
+        body += (f"<line x1='{ox}' y1='{py}' x2='{ox + size * cell}' y2='{py}' stroke='{INK}' "
+                 f"stroke-width='{2 if i == 0 else .6}' opacity='{1 if i == 0 else .5}'/>")
+        body += _txt(px, oy + 18, i, 12, bold=False)
+        body += _txt(ox - 8, py + 4, i, 12, anchor="end", bold=False)
+    body += f"<circle cx='{ox + x * cell}' cy='{oy - y * cell}' r='7' fill='#e2544a' stroke='{INK}' stroke-width='2'/>"
+    body += _txt(ox + size * cell / 2, H - 4, "x", 13) + _txt(14, oy - size * cell / 2, "y", 13)
+    return _svg(W, H, body, f"A grid with a point at ({x}, {y})")
+
+
+def angle(deg):
+    """An angle of `deg` degrees with an arc."""
+    import math
+    deg = max(5, min(180, int(deg)))
+    cx, cy, r = 50, 130, 110
+    a = math.radians(deg)
+    ex, ey = cx + r * math.cos(a), cy - r * math.sin(a)
+    ar = 36
+    body = _card(220, 160)
+    body += (f"<line x1='{cx}' y1='{cy}' x2='{cx + r}' y2='{cy}' stroke='{INK}' stroke-width='3'/>"
+             f"<line x1='{cx}' y1='{cy}' x2='{ex:.1f}' y2='{ey:.1f}' stroke='{INK}' stroke-width='3'/>"
+             f"<path d='M{cx + ar} {cy} A{ar} {ar} 0 0 0 "
+             f"{cx + ar * math.cos(a):.1f} {cy - ar * math.sin(a):.1f}' fill='none' stroke='#d64545' stroke-width='3'/>")
+    if deg == 90:
+        body += f"<path d='M{cx + 16} {cy} v-16 h-16' fill='none' stroke='#d64545' stroke-width='2'/>"
+    return _svg(220, 160, body, f"An angle of {deg} degrees")
+
+
+_PICTURES = {
+    "array": array_fig, "bars": bars, "pie": pie, "rect": rect_fig, "vmul": vmul_fig,
+    "dots": dots, "clock": clock, "coins": coins, "number_line": number_line,
+    "shape": shape, "parts": parts, "tally": tally, "bar_graph": bar_graph,
+    "picture_graph": picture_graph, "cubes": cubes, "grid_point": grid_point, "angle": angle,
+}
+PICTURE_KINDS = sorted(_PICTURES)
+
+
+# --------------------------------------------------------------------------
 def for_question(picture):
     """Turn a Question.picture tuple into SVG text (or None)."""
     if not picture:
         return None
     kind, *args = picture
-    if kind == "array":
-        return array_fig(*args)
-    if kind == "bars":
-        return bars(*args)
-    if kind == "pie":
-        return pie(*args)
-    if kind == "rect":
-        return rect_fig(*args)
-    if kind == "vmul":
-        return vmul_fig(*args)
-    return None
+    maker = _PICTURES.get(kind)
+    return maker(*args) if maker else None

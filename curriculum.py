@@ -325,6 +325,14 @@ def _ev(node, env, funcs):
         return [_ev(e, env, funcs) for e in node.elts]
     if isinstance(node, ast.Subscript):
         seq = _ev(node.value, env, funcs)
+        if not isinstance(seq, (list, str)):
+            raise CurriculumError("only a list or text can be indexed")
+        if isinstance(node.slice, ast.Slice):          # seq[a:b], no step
+            if node.slice.step is not None:
+                raise CurriculumError("a slice step is not allowed")
+            lo = None if node.slice.lower is None else int(_ev(node.slice.lower, env, funcs))
+            hi = None if node.slice.upper is None else int(_ev(node.slice.upper, env, funcs))
+            return seq[lo:hi]
         return seq[int(_ev(node.slice, env, funcs))]
     if isinstance(node, ast.Call):
         if not isinstance(node.func, ast.Name) or node.func.id not in funcs or node.keywords:
@@ -667,8 +675,16 @@ def show_answer(q: Question, value=None) -> str:
 # --------------------------------------------------------------------------
 # Checking content (used by the tests and by `python curriculum.py`)
 # --------------------------------------------------------------------------
-def check_template(tpl: Template, topic_id: str, samples: int = 60, seed: int = 0) -> list:
-    """Generate many questions from one template. Returns a list of problems."""
+def check_template(tpl: Template, topic_id: str, samples: int = 60, seed: int = 0,
+                   max_places: int = 2) -> list:
+    """Generate many questions from one template. Returns a list of problems.
+
+    Checks: the text has no leftover braces; a choice question has 2-4 different
+    choices and exactly one of them is the answer; other answers are not
+    negative, a `number` answer is whole, a `decimal` answer has a short decimal
+    form with at most `max_places` places, and the answer as shown on screen is
+    accepted back when typed; a picture, if any, can be drawn."""
+    import pictures
     problems = []
     rng = random.Random(seed)
     for level in tpl.levels:
@@ -678,11 +694,12 @@ def check_template(tpl: Template, topic_id: str, samples: int = 60, seed: int = 
             except CurriculumError as e:
                 return problems + [str(e)]
             where = f"{tpl.where_from}, level {level}: {q.text!r}"
-            if "{" in q.text or "}" in q.text:
-                problems.append(f"{where}: leftover brace in text")
+            for text in (q.text, q.hint, q.explanation):
+                if "{" in text or "}" in text:
+                    problems.append(f"{where}: leftover brace in {text!r}")
             if q.kind == "choice":
-                if q.answer not in q.choices:
-                    problems.append(f"{where}: answer {q.answer!r} is not one of {q.choices}")
+                if q.choices.count(q.answer) != 1:
+                    problems.append(f"{where}: answer {q.answer!r} must be exactly one of {q.choices}")
                 if not 2 <= len(q.choices) <= 4 or len(set(q.choices)) != len(q.choices):
                     problems.append(f"{where}: needs 2-4 different choices, got {q.choices}")
             else:
@@ -691,9 +708,26 @@ def check_template(tpl: Template, topic_id: str, samples: int = 60, seed: int = 
                 if q.kind == "number" and q.answer.denominator != 1:
                     problems.append(f"{where}: answer {q.answer} is not a whole number "
                                     f"(use kind = \"fraction\" or \"decimal\")")
+                if q.kind == "decimal":
+                    try:
+                        places = len(fmt_decimal(q.answer).partition(".")[2])
+                    except ValueError:
+                        places = None
+                    if places is None or places > max_places:
+                        problems.append(f"{where}: decimal answer {q.answer} needs more than "
+                                        f"{max_places} decimal places")
                 shown = show_answer(q)
                 if not is_correct(q, parse_answer(shown)):
                     problems.append(f"{where}: the shown answer {shown!r} is not accepted back")
+            if q.picture:
+                try:
+                    svg = pictures.for_question(q.picture)
+                except _CONTENT_ERRORS as e:
+                    svg = None
+                    problems.append(f"{where}: picture {q.picture!r} failed: {e}")
+                if svg is None:
+                    problems.append(f"{where}: unknown picture {q.picture[0]!r} "
+                                    f"(use one of {pictures.PICTURE_KINDS})")
             if problems:
                 return problems
     return problems
@@ -704,7 +738,8 @@ def check_all(samples: int = 60) -> list:
     for g in load_all().values():
         for topic in g.topics.values():
             for i, tpl in enumerate(topic.templates):
-                problems += check_template(tpl, topic.id, samples, seed=i)
+                problems += check_template(tpl, topic.id, samples, seed=i,
+                                           max_places=g.decimal_places)
     return problems
 
 
