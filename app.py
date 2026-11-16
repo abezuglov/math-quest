@@ -85,15 +85,28 @@ def new_game(game):
 
 
 def end_game():
-    """Back to the title screen. The grade in the link (a teacher's ?grade=
-    link) is kept, so the next child does not have to pick it again."""
+    """Back to the title screen. A teacher's ?grade= link (the grade that was in
+    the address when the page was first opened, before any hero) is kept, so the
+    next child does not have to pick it again. A grade a child picked is not."""
     st.session_state.pop("celebrated", None)
     st.session_state.pop("game", None)
     st.session_state.pop("grade_pick", None)
-    grade = st.query_params.get("grade")
+    grade = st.session_state.get("link_grade")
     st.query_params.clear()
     if grade:
         st.query_params["grade"] = grade
+
+
+def start_game(make):
+    """Start a hero with make(), or show the teacher why it cannot start
+    (every topic of that grade switched off). Returns what make() returns, or
+    False when the grade cannot be played."""
+    try:
+        return make()
+    except ValueError as e:
+        st.error(f"This grade cannot be played: {e}. A teacher can switch a topic "
+                 "back on with `enabled = true` in that file.")
+        return False
 
 
 def sync_url(g):
@@ -144,8 +157,9 @@ def title_screen():
         with st.form("start"):
             name = st.text_input("What is your hero's name?", max_chars=20)
             go = st.form_submit_button("Begin the quest ⚔️", type="primary")
-        if go:
-            new_game(Game(name.strip() or "Hero", grade))
+        game = start_game(lambda: Game(name.strip() or "Hero", grade)) if go else None
+        if game:
+            new_game(game)
             st.rerun()
         if not fixed and st.button("Pick another grade", key="grade_again"):
             st.session_state.pop("grade_pick", None)
@@ -157,11 +171,11 @@ def title_screen():
                                  key="resume_code")
             back = st.form_submit_button("Continue my quest 🗺️")
         if back:
-            game = Game.from_code(old_name.strip() or "Hero", code)
+            game = start_game(lambda: Game.from_code(old_name.strip() or "Hero", code))
             if game is None:
                 st.warning("That code does not look right. Check each letter and "
                            "number and try again.")
-            else:
+            elif game:
                 new_game(game)
                 st.rerun()
     with st.expander("How to play"):
@@ -217,8 +231,10 @@ def sidebar(g):
                 name = g.name
                 st.session_state.pop("side_grade", None)
                 st.session_state.pop("side_grade_sure", None)
-                new_game(Game(name, pick))
-                st.rerun()
+                game = start_game(lambda: Game(name, pick))
+                if game:
+                    new_game(game)
+                    st.rerun()
         with st.expander("Teacher"):
             st.caption("Starts a brand new game for a new player. "
                        "This hero's gems and XP are erased.")
@@ -614,13 +630,18 @@ SCREENS = {
 
 
 def main():
+    if "link_grade" not in st.session_state:
+        # First run of this visit. A ?grade= with no hero is a teacher's link;
+        # one next to a hero was written by sync_url and is not.
+        st.session_state.link_grade = (None if st.query_params.get("hero")
+                                       else st.query_params.get("grade"))
     if "game" not in st.session_state and st.query_params.get("hero"):
         # The page was refreshed or bookmarked: bring the hero back from the address.
         name = (st.query_params.get("name") or "Hero").strip()[:20] or "Hero"
-        game = Game.from_code(name, st.query_params.get("hero"))
+        game = start_game(lambda: Game.from_code(name, st.query_params.get("hero")))
         if game is None:
             st.query_params.clear()
-        else:
+        elif game:
             new_game(game)
     if "game" not in st.session_state:
         title_screen()

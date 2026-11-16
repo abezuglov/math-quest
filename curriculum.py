@@ -568,9 +568,9 @@ def load_grade(path: Path) -> Grade:
         raise CurriculumError(f"{path.name}: no topics")
     regions = [_region(r, topics, path.name) for r in data.get("region", [])]
     keys = [r["key"] for r in regions]
-    if len(regions) != len(REGION_KEYS) or len(set(keys)) != len(keys):
+    if keys != list(REGION_KEYS):
         raise CurriculumError(f"{path.name}: needs exactly 6 regions, one for each of "
-                              f"{list(REGION_KEYS)}")
+                              f"{list(REGION_KEYS)}, in that order")
     if any(r["final"] for r in regions[:-1]):
         raise CurriculumError(f"{path.name}: only the last region may be the finale")
     regions[-1]["final"] = True

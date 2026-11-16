@@ -195,3 +195,18 @@ def test_bad_codes_are_rejected_not_crashed():
         encode_code("4", [True] * 6, [], 0, 0)
     with pytest.raises(ValueError):
         encode_code("4", [True] * 6, [1] * 32, 0, 0)
+
+
+def test_rank_thresholds_scale_with_a_smaller_game(monkeypatch):
+    from engine import rank_for
+    assert rank_for(150, 0.5) == RANKS[1][1] and rank_for(149, 0.5) == RANKS[0][1]
+    assert Game("Fay", "4").rank_scale == 1.0
+    for tid in ("fractions", "g4_decimals"):          # the forest region drops out
+        monkeypatch.setattr(curriculum.grade("4").topics[tid], "enabled", False)
+    g = Game("Fay", "4")
+    assert g.rank_scale < 1
+    top = round(RANKS[-1][0] * g.rank_scale / 10) * 10
+    g.xp = top
+    assert g.rank == RANKS[-1][1]
+    g.xp = top - 10
+    assert g.rank != RANKS[-1][1]

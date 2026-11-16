@@ -195,3 +195,45 @@ def test_change_grade_in_the_sidebar_starts_a_new_hero_and_keeps_the_old_code():
     assert h is not g and h.grade == target and h.xp == 0 and h.name == "Rae"
     assert at.query_params["grade"] in (target, [target])
     assert Game.from_code("Rae", old_code).xp == 250
+
+
+def restart(at):
+    at.checkbox(key="side_sure").check().run()
+    click(at, lambda b: b.label == "Restart game")
+
+
+def test_restart_keeps_a_teachers_grade_link_but_not_a_childs_pick():
+    import curriculum
+    grades = [c for c in curriculum.load_all()]
+    keys = {f"grade_{c}" for c in grades}
+    # a child picked the grade: the next child gets the grade buttons again
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    click(at, lambda b: b.key == f"grade_{grades[-1]}")
+    at.text_input[0].set_value("Pia")
+    click(at, lambda b: "Begin" in b.label)
+    restart(at)
+    assert not at.exception and "game" not in at.session_state
+    assert {b.key for b in at.button} >= keys
+    # a teacher's ?grade= link survives the restart
+    linked = AppTest.from_file(APP, default_timeout=30)
+    linked.query_params["grade"] = grades[0]
+    linked.run()
+    linked.text_input[0].set_value("Quin")
+    click(linked, lambda b: "Begin" in b.label)
+    restart(linked)
+    assert not linked.exception and "game" not in linked.session_state
+    assert not any(b.key in keys for b in linked.button)
+    assert linked.query_params["grade"] in (grades[0], [grades[0]])
+
+
+def test_a_grade_with_every_topic_switched_off_shows_a_message(monkeypatch):
+    import curriculum
+    for t in curriculum.grade("4").topics.values():
+        monkeypatch.setattr(t, "enabled", False)
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.query_params["grade"] = "4"
+    at.run()
+    at.text_input[0].set_value("Zed")
+    click(at, lambda b: "Begin" in b.label)
+    assert not at.exception and "game" not in at.session_state
+    assert any("cannot be played" in e.value for e in at.error)

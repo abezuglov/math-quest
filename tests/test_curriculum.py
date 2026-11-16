@@ -101,6 +101,9 @@ def test_a_broken_file_is_reported_clearly(tmp_path):
         load(good.replace('hint="h"', 'hint="h"\nhnt="x"'))
     with pytest.raises(CurriculumError, match="regions"):
         load(good.replace('[[region]]\nkey="mines"', '[[region]]\nkey="docks"'))
+    with pytest.raises(CurriculumError, match="in that order"):    # peak first, village last
+        load(good.replace('key="village"', 'key="tmp"').replace('key="peak"', 'key="village"')
+             .replace('key="tmp"', 'key="peak"').replace('mix=true\nfinal=true\n', ''))
     with pytest.raises(CurriculumError, match="unknown topics"):
         load(good.replace('topics=["g2_a"]', 'topics=["nope"]', 1))
     with pytest.raises(CurriculumError, match="generator"):
