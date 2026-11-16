@@ -96,6 +96,12 @@ outro  = "The empty armor clatters down. The Gem of Shapes makes the castle whol
   slot  = 1
   intro = "Which is bigger, a half or a fourth? Help me pick."
   [[region.encounter]]
+  slot  = 3
+  name  = "Hazel the Squirrel Chef"
+  emoji = "🐿️"
+  intro = "I cook for the castle now! My recipe needs just the right part of the nut loaf. Help me cut it!"
+  win   = "Perfect! Not a crumb too many."
+  [[region.encounter]]
   slot  = 4
   intro = "One last pie before the tower. How is it cut?"
 

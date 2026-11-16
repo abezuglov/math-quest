@@ -135,7 +135,7 @@ REGIONS = [
              "intro": "I need to know how many lamps to light. Help me work it out.",
              "win": "The tunnel glows. Onward, hero!"},
             {"kind": "fight", "name": "Times Bat", "emoji": "🦇",
-             "intro": "Screeee! I flap in groups. How many of us are there? You'll never know!",
+             "intro": "Screeee! I swoop down and mix up your numbers. You'll never catch me!",
              "win": "The Times Bat zigzags away into the dark."},
             {"kind": "task", "task": "multiples", "name": "The Echo Cave", "emoji": "🕳️",
              "intro": "Hundreds of bats hang here, and each one carries a number. Catch the right ones!",
@@ -144,7 +144,7 @@ REGIONS = [
              "intro": "One more load to count before the deep tunnel. Ready?",
              "win": "Right on track! Mind the gap."},
             {"kind": "fight", "name": "Rock Grumbler", "emoji": "🪨",
-             "intro": "GRRRUMBLE. Rocks times rocks. Too many for a little hero.",
+             "intro": "GRRRUMBLE. Too many rocks for a little hero.",
              "win": "The Rock Grumbler rolls over and falls asleep."},
             {"kind": "boss", "name": "The Crystal Golem", "emoji": "🗿",
              "intro": "I AM BUILT FROM A THOUSAND CRYSTALS. CAN YOU COUNT THEM ALL?",
@@ -172,7 +172,7 @@ REGIONS = [
              "intro": "I've got fish for the boats and no numbers to count them. Can you help?",
              "win": "Every boat is happy. Thank you kindly!"},
             {"kind": "fight", "name": "Splitter Crab", "emoji": "🦀",
-             "intro": "Snip snap! I split things UNFAIRLY. Stop me if you can!",
+             "intro": "Snip snap! I snip the numbers off the crates. Stop me if you can!",
              "win": "The Splitter Crab scuttles sideways into the sea."},
             {"kind": "task", "task": "share", "name": "Dockmaster Della", "emoji": "🚢",
              "intro": "Crates everywhere! Load my boats fairly before the tide goes out.",
@@ -181,10 +181,10 @@ REGIONS = [
              "intro": "A good cook wastes nothing. Help me with this kitchen sum.",
              "win": "Perfect portions! Have some stew."},
             {"kind": "fight", "name": "Remainder Eel", "emoji": "🐍",
-             "intro": "Ssso many leftovers! I eat them all. Even socks.",
+             "intro": "Ssso many numbers! I gobble them all up. Even socks.",
              "win": "The Remainder Eel slips back under the dock."},
             {"kind": "boss", "name": "The Kraken of Shares", "emoji": "🐙",
-             "intro": "EIGHT ARMS. EIGHT SHARES. ALL OF THEM MINE!",
+             "intro": "EIGHT ARMS. ALL THE CARGO IS MINE!",
              "win": "The Kraken lets go of the ships, one arm at a time."},
         ],
     },
@@ -210,7 +210,7 @@ REGIONS = [
              "intro": "Whooo knows the answer? Show me, little hero.",
              "win": "Wise indeed. The path ahead is clear."},
             {"kind": "fight", "name": "Sliver Spider", "emoji": "🕷️",
-             "intro": "I cut my web into tiny, tiny parts. You'll get tangled in them!",
+             "intro": "I spin my web across the path. You'll get tangled in it!",
              "win": "The Sliver Spider scurries up its thread."},
             {"kind": "task", "task": "shade", "name": "Hazel the Squirrel Chef", "emoji": "🐿️",
              "intro": "My recipe needs just the right part of the nut loaf. Help me cut it!",
@@ -219,11 +219,11 @@ REGIONS = [
              "intro": "The stream splits into parts here. Which way? Answer and I'll show you.",
              "win": "This way! Follow me."},
             {"kind": "fight", "name": "Thorn Sprite", "emoji": "🌿",
-             "intro": "A piece of this, a piece of that. You can't have ANY of it!",
+             "intro": "Prickle, prickle! My thorns hide every answer. You can't have ANY of them!",
              "win": "The Thorn Sprite vanishes in a puff of leaves."},
             {"kind": "boss", "name": "The Piecemeal Wolf", "emoji": "🐺",
-             "intro": "I never take the whole. I take it bit... by bit... by bit.",
-             "win": "The Wolf tilts its head. 'You see the whole AND the parts. Go on.'"},
+             "intro": "I creep through the trees and steal the numbers, one... by one... by one.",
+             "win": "The Wolf tilts its head. 'You are sharper than you look. Go on.'"},
         ],
     },
     {
@@ -233,7 +233,7 @@ REGIONS = [
         "gem": "Gem of Measures",
         "topics": ["area_perimeter"],
         "intro": "The royal builders have stopped work. Without numbers they cannot "
-                 "measure a wall or fence a garden. Help them with area and perimeter.",
+                 "measure a wall or plan a room. Help them get building again.",
         "outro": "The empty armor of the Blueprint Knight clatters to the floor. The "
                  "Gem of Measures glows, and the castle walls stand straight again.",
         "memory": "Mason Marta looks up at the tower door. 'Far too tall for people, "
@@ -247,7 +247,7 @@ REGIONS = [
              "intro": "The Queen's garden needs planting. Help me figure out the size.",
              "win": "The tulips will fit perfectly!"},
             {"kind": "fight", "name": "Fence Gremlin", "emoji": "😈",
-             "intro": "I moved all the fences! Now nobody knows how far around anything is!",
+             "intro": "I moved all the fences! Now nobody knows where anything goes!",
              "win": "The Fence Gremlin trips over its own fence and tumbles away."},
             {"kind": "task", "task": "garden", "name": "The Queen's New Garden", "emoji": "📐",
              "intro": "The Queen has ordered a new garden, and the plan is blank. Help Gwen lay it out!",
@@ -256,10 +256,10 @@ REGIONS = [
              "intro": "One last room to floor before the tower. Give me a hand?",
              "win": "A perfect fit. The tower door is open."},
             {"kind": "fight", "name": "Moat Serpent", "emoji": "🐊",
-             "intro": "Round and round the castle I swim. How far is it? I'll never tell!",
+             "intro": "Round and round the castle I swim. You'll never get past me!",
              "win": "The Moat Serpent dives deep and stays there."},
             {"kind": "boss", "name": "The Blueprint Knight", "emoji": "🛡️",
-             "intro": "I GUARD EVERY PLAN OF THIS CASTLE. MEASURE WRONG AND IT ALL FALLS.",
+             "intro": "I GUARD EVERY PLAN OF THIS CASTLE. ONE WRONG ANSWER AND IT ALL FALLS.",
              "win": "The Knight's helmet nods. The armor was empty all along."},
         ],
     },
@@ -318,8 +318,9 @@ REGIONS = [
 
 REGION_BY_KEY = {r["key"]: r for r in REGIONS}
 
-# The 4th-grade lines above that name a topic, restored by grade_4.toml's
-# [[region.encounter]] overrides.
+# The lines above fit any grade's topics. Lines that name a topic (times,
+# shares, fractions, perimeter) live in each grade file's [[region.encounter]]
+# overrides; grade_4.toml holds the original 4th-grade ones.
 ENCOUNTER_FIELDS = ("name", "emoji", "intro", "win")
 
 

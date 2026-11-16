@@ -30,6 +30,12 @@ task_topic = "multiplication"
   [[region.encounter]]
   slot  = 1
   intro = "I need to know how many lamps to light. Help me multiply."
+  [[region.encounter]]
+  slot  = 2
+  intro = "Screeee! I flap in groups. How many of us are there? You'll never know!"
+  [[region.encounter]]
+  slot  = 5
+  intro = "GRRRUMBLE. Rocks times rocks. Too many for a little hero."
 
 [[region]]
 key    = "docks"
@@ -47,6 +53,15 @@ task_topic = "division"
   [[region.encounter]]
   slot  = 4
   intro = "A good cook wastes nothing. Tell me about the shares and the leftovers."
+  [[region.encounter]]
+  slot  = 2
+  intro = "Snip snap! I split things UNFAIRLY. Stop me if you can!"
+  [[region.encounter]]
+  slot  = 5
+  intro = "Ssso many leftovers! I eat them all. Even socks."
+  [[region.encounter]]
+  slot  = 6
+  intro = "EIGHT ARMS. EIGHT SHARES. ALL OF THEM MINE!"
 
 [[region]]
 key    = "forest"
@@ -61,6 +76,16 @@ task_topic = "fractions"
   [[region.encounter]]
   slot  = 1
   intro = "Whooo knows their fractions? Show me, little hero."
+  [[region.encounter]]
+  slot  = 2
+  intro = "I cut my web into tiny, tiny parts. You'll get tangled in them!"
+  [[region.encounter]]
+  slot  = 5
+  intro = "A piece of this, a piece of that. You can't have ANY of it!"
+  [[region.encounter]]
+  slot  = 6
+  intro = "I never take the whole. I take it bit... by bit... by bit."
+  win   = "The Wolf tilts its head. 'You see the whole AND the parts. Go on.'"
 
 [[region]]
 key    = "castle"
@@ -69,6 +94,16 @@ gem    = "Gem of Measures"
 topics = ["area_perimeter", "g4_angles", "g4_lines"]
 task   = "garden"
 task_topic = "area_perimeter"
+intro  = "The royal builders have stopped work. Without numbers they cannot measure a wall or fence a garden. Help them with area and perimeter."
+  [[region.encounter]]
+  slot  = 2
+  intro = "I moved all the fences! Now nobody knows how far around anything is!"
+  [[region.encounter]]
+  slot  = 5
+  intro = "Round and round the castle I swim. How far is it? I'll never tell!"
+  [[region.encounter]]
+  slot  = 6
+  intro = "I GUARD EVERY PLAN OF THIS CASTLE. MEASURE WRONG AND IT ALL FALLS."
 
 [[region]]
 key    = "peak"

@@ -86,6 +86,53 @@ def test_5th_grade_place_value_number_has_three_decimal_places():
         assert _places(re.search(r"In ([\d.]+),", q.text)[1]) == 3, q.text
 
 
+FOURTH_GRADE_WORDS = re.compile(
+    r"\btimes \w|in groups|shares|leftovers|split things|how far (around|is it)|perimeter|tiny parts"
+    r"|bit\.\.\.|piece of|measure wrong", re.I)
+
+
+def _lines(region):
+    """Story text with the character names taken out (Times Bat may stay)."""
+    names = [e["name"].removeprefix("The ") for e in region["encounters"]]
+    for e in [region, *region["encounters"]]:
+        for line in (e["intro"], e.get("outro") or e.get("win") or ""):
+            for name in names:
+                line = line.replace(name, "")
+            yield line
+
+
+def test_k_to_2_story_lines_do_not_name_4th_grade_topics():
+    for g in ("K", "1", "2"):
+        for spec in cu.grade(g).regions:
+            for line in _lines(story.build_region(spec)):
+                assert not FOURTH_GRADE_WORDS.search(line), (g, spec["key"], line)
+
+
+def test_region_text_names_its_own_gem():
+    gems = {r["gem"] for g in cu.load_all() for r in cu.grade(g).regions}
+    for g in cu.load_all():
+        for spec in cu.grade(g).regions:
+            r = story.build_region(spec)
+            for other in gems - {r["gem"]}:
+                assert other not in r["intro"] + r["outro"], (g, r["key"], other)
+
+
+def test_4th_grade_keeps_its_topic_lines():
+    regions = {r["key"]: story.build_region(r) for r in cu.grade("4").regions}
+    assert "Rocks times rocks" in regions["mines"]["encounters"][5]["intro"]
+    assert "EIGHT SHARES" in regions["docks"]["encounters"][6]["intro"]
+    assert "bit... by bit" in regions["forest"]["encounters"][6]["intro"]
+    assert "area and perimeter" in regions["castle"]["intro"]
+
+
+def test_the_shade_task_text_matches_the_nut_loaf_everywhere():
+    for g in cu.load_all():
+        for spec in cu.grade(g).regions:
+            for e in story.build_region(spec)["encounters"]:
+                if e.get("task") == "shade":
+                    assert "nut loaf" in e["intro"] and "garden" not in e["intro"], (g, e)
+
+
 def test_5th_grade_castle_intro_fits_its_topics():
     spec = next(r for r in cu.grade("5").regions if r["key"] == "castle")
     assert "perimeter" not in story.build_region(spec)["intro"]

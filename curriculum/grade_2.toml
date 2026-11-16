@@ -35,6 +35,7 @@ task   = "multiples"
 task_topic  = "g2_skip"
 task_levels = [1, 1]
 intro  = "The miners pack crystals in boxes of a hundred, bundles of ten, and loose ones. Hundreds, tens, ones: count them and compare the piles!"
+outro  = "The Crystal Golem crumbles into sparkling dust. The Gem of Hundreds lights up every tunnel!"
   [[region.encounter]]
   slot  = 0
   intro = "Boxes of a hundred and bundles of ten. What number is that?"
@@ -54,6 +55,7 @@ task   = "share"
 task_topic  = "g2_arrays"
 task_levels = [1, 1]
 intro  = "The crates at the docks are stacked in neat rows. Count the rows and columns, and add up the big shipments!"
+outro  = "The Kraken sinks beneath the waves. The Gem of Rows bobs up, and every crate is back in its row!"
   [[region.encounter]]
   slot  = 0
   intro = "My crates are stacked in rows. How many crates, sailor?"
@@ -70,6 +72,7 @@ name   = "Measure Forest"
 gem    = "Gem of Measures"
 topics = ["g2_length", "g2_time"]
 intro  = "In the forest the rangers measure trees and watch the clock. But every ruler and clock has lost its numbers!"
+outro  = "The Piecemeal Wolf trots away. The Gem of Measures puts the numbers back on every ruler and clock!"
   [[region.encounter]]
   slot  = 0
   intro = "How long is my rolling pin? Help me measure."
@@ -89,12 +92,19 @@ task   = "shade"
 task_topic  = "g2_shapes"
 task_levels = [1, 2]
 intro  = "The castle keeps charts of everything: the harvest, the visitors, the shapes of its windows. Read the graphs and name the shapes!"
+outro  = "The empty armor clatters to the floor. The Gem of Charts glows, and every chart in the castle fills up again!"
   [[region.encounter]]
   slot  = 0
   intro = "The harvest chart! Read the bars for me."
   [[region.encounter]]
   slot  = 1
   intro = "My garden beds are cut into equal parts. What are they called?"
+  [[region.encounter]]
+  slot  = 3
+  name  = "Hazel the Squirrel Chef"
+  emoji = "🐿️"
+  intro = "I cook for the castle now! My recipe needs just the right part of the nut loaf. Help me cut it!"
+  win   = "Perfect! Not a crumb too many."
   [[region.encounter]]
   slot  = 4
   intro = "One last chart before the tower. Read it well."
