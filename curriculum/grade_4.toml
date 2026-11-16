@@ -480,8 +480,8 @@ tip      = "A right angle is 90°. A straight line is 180°. Angles that share a
 
   [[topic.question]]
   levels  = [3, 4, 5]
-  vars    = { n = "randint(1, 4)" }
-  text    = "{n} right {'angle' if n == 1 else 'angles'} together make how many degrees?"
+  vars    = { n = "randint(2, 4)" }
+  text    = "{n} right angles together make how many degrees?"
   answer  = "90 * n"
   hint    = "Each right angle is 90°."
   explain = "{n} × 90 = {answer}°."
