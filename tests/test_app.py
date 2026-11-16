@@ -7,7 +7,6 @@ pytest.importorskip("streamlit")
 from streamlit.testing.v1 import AppTest  # noqa: E402
 
 from engine import Game  # noqa: E402
-from questions import fmt  # noqa: E402
 
 APP = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.py")
 SIDE = ("Restart game", "⬅️ Back to the map", "Play again from the beginning 🔁")
@@ -46,13 +45,15 @@ def start(grade="4"):
     return at
 
 
-def test_full_playthrough_through_the_ui():
-    at = start()
+@pytest.mark.parametrize("grade", ["4", "K", "5"])
+def test_full_playthrough_through_the_ui(grade):
+    import curriculum
+    at = start(grade)
     assert not at.exception
     at.text_input[0].set_value("Testy <b>")
     click(at, lambda b: "Begin" in b.label)
     g = at.session_state["game"]
-    assert g.phase == "map"
+    assert g.phase == "map" and g.grade == grade
     seen, kinds = set(), set()
     turn = 0
     for _ in range(900):
@@ -74,7 +75,8 @@ def test_full_playthrough_through_the_ui():
                 want = next(c for c in q.choices if (c != q.answer) == miss)
                 click(at, lambda b: b.key == f"c_{g.qcount}_{g.enc['attempt']}_{want}")
             else:
-                at.text_input[0].set_value("1" if miss else fmt(q.answer))
+                right = curriculum.show_answer(q)
+                at.text_input[0].set_value(("2" if right == "1" else "1") if miss else right)
                 click(at, lambda b: "⚔️" in b.label or "✅" in b.label)
         elif g.phase == "task":
             kinds.add(g.task.kind)
@@ -91,9 +93,10 @@ def test_full_playthrough_through_the_ui():
     assert g.phase == "victory"
     assert {"map", "region_intro", "question", "task", "feedback", "region_done",
             "trial_done", "story"} <= seen
-    assert kinds == {"coins", "multiples", "share", "shade", "garden", "ledger"}
+    assert kinds == {r["task"] for r in curriculum.grade(grade).regions if r.get("task")}
     cert = next(m.value for m in at.markdown if "Certificate of Heroism" in m.value)
     assert "Testy &lt;b&gt;" in cert
+    assert curriculum.grade(grade).name in cert
 
     # after the certificate: back to the map, then quick practice on a won region
     click(at, lambda b: "Back to the map" in b.label and b.label not in SIDE)
