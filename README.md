@@ -11,6 +11,8 @@ topics. The math lives in plain text files (`curriculum/grade_k.toml` ...
 
 ## Run it on your computer
 
+You need Python 3.11 or newer.
+
 ```
 python -m venv .venv
 .venv\Scripts\activate          (Mac/Linux: source .venv/bin/activate)
@@ -25,6 +27,7 @@ The game opens in the browser at http://localhost:8501.
 1. Create a GitHub repository and push this folder to it.
 2. Go to https://share.streamlit.io and sign in with GitHub.
 3. Click **Create app**, pick the repository, and set the main file to `app.py`.
+   Under **Advanced settings**, pick Python 3.11 or newer.
 4. Click **Deploy**. Share the link it gives you with the class.
 
 ### One link per grade

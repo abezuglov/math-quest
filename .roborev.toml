@@ -1,0 +1,29 @@
+agent = "claude-code"
+
+review_guidelines = """
+This is a Streamlit math text quest for Kindergarten to 5th grade (ages 5-11).
+The math content lives in curriculum/grade_*.toml (one file per grade, format in
+curriculum/FORMAT.md); curriculum.py turns those templates into questions.
+
+Flag:
+- Wrong math: questions whose stored answer is incorrect, ambiguous, or has more
+  than one valid answer the checker would reject; choice questions with zero or
+  several right choices; negative numbers; answers that need rounding when the
+  question does not ask for it; money or decimal answers with too many places.
+- Check each question against its grade's reading level and Common Core
+  standard: K and 1st at most about 10 words, numbers before words, pictures
+  where possible; nothing above the grade of the file it is in.
+- Anything not kid-appropriate in story text, monster names, or feedback.
+- Hero-code encode/decode changes that break old codes or lose progress
+  (including old 12-character 4th-grade codes), and grade files whose topics
+  were reordered or deleted instead of switched off or added at the end.
+- Content files that could run code: only the evaluator in curriculum.py may
+  read expressions.
+- Streamlit session_state bugs: state lost on rerun, or shared between players.
+- New game logic or content without a matching test in tests/.
+
+Known non-issues (do not flag):
+- Hero codes are guessable by design; they are encouragement, not security.
+- No accounts, auth, or persistence beyond the hero code and URL params.
+- Keep it simple: do not suggest frameworks, databases, or heavy abstractions.
+"""
