@@ -57,6 +57,7 @@ key    = "castle"
 name   = "Castle Builders"
 gem    = "Gem of Measures"
 topics = ["g5_volume", "g5_coords"]
+intro  = "The royal builders have stopped work. They must fill every room and place every tower on the plan. Help them with volume and the grid!"
 task   = "garden"
 task_topic = "g5_volume"
   [[region.encounter]]
@@ -94,7 +95,7 @@ tip      = "Line up the decimal points. Compare the tenths first, then the hundr
   [[topic.question]]
   levels  = [1, 2, 3]
   vars    = { m = "randint(1001, 9999)", i = "randint(0, 1 if L == 1 else 2)" }
-  where   = "different(digit(m, 1000), digit(m, 100), digit(m, 10), digit(m, 1))"
+  where   = "m % 10 != 0 and different(digit(m, 1000), digit(m, 100), digit(m, 10), digit(m, 1))"
   text    = "In {m / 1000|dec}, which digit is in the {['tenths', 'hundredths', 'thousandths'][i]} place?"
   answer  = "digit(m, [100, 10, 1][i])"
   hint    = "After the point come tenths, then hundredths, then thousandths."
@@ -190,7 +191,7 @@ tip      = "To add or subtract, line up the decimal points. To multiply, multipl
   levels  = [3, 4, 5]
   kind    = "decimal"
   vars    = { k = "randint(11, 99)", d = "choice([10, 100])", n = "randint(2, 9)" }
-  where   = "k % 10 != 0"
+  where   = "k % 10 != 0 and (n * k) % 10 != 0"
   text    = "{n * k / d|dec} ÷ {n} = ?"
   answer  = "k / d"
   hint    = "Divide as whole numbers: {n * k} ÷ {n}. Then put the point back in the same place."

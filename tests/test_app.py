@@ -226,6 +226,42 @@ def test_restart_keeps_a_teachers_grade_link_but_not_a_childs_pick():
     assert linked.query_params["grade"] in (grades[0], [grades[0]])
 
 
+def _params(at):
+    return {k: (v[0] if isinstance(v, list) else v) for k, v in at.query_params.items()}
+
+
+def test_a_teachers_grade_link_survives_a_refresh_then_restart():
+    import curriculum
+    grades = [c for c in curriculum.load_all()]
+    keys = {f"grade_{c}" for c in grades}
+    linked = AppTest.from_file(APP, default_timeout=30)
+    linked.query_params["grade"] = grades[0]
+    linked.run()
+    linked.text_input[0].set_value("Quin")
+    click(linked, lambda b: "Begin" in b.label)
+    # refresh: a new session opened with the address the game wrote
+    again = AppTest.from_file(APP, default_timeout=30)
+    for k, v in _params(linked).items():
+        again.query_params[k] = v
+    again.run()
+    assert not again.exception and "game" in again.session_state
+    restart(again)
+    assert not again.exception and "game" not in again.session_state
+    assert not any(b.key in keys for b in again.button)
+    assert again.query_params["grade"] in (grades[0], [grades[0]])
+    # a child's own pick is still not kept after a refresh
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    click(at, lambda b: b.key == f"grade_{grades[-1]}")
+    at.text_input[0].set_value("Pia")
+    click(at, lambda b: "Begin" in b.label)
+    fresh = AppTest.from_file(APP, default_timeout=30)
+    for k, v in _params(at).items():
+        fresh.query_params[k] = v
+    fresh.run()
+    restart(fresh)
+    assert {b.key for b in fresh.button} >= keys
+
+
 def test_a_grade_with_every_topic_switched_off_shows_a_message(monkeypatch):
     import curriculum
     for t in curriculum.grade("4").topics.values():

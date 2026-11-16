@@ -112,11 +112,15 @@ def start_game(make):
 def sync_url(g):
     """Keep the hero code in the page address, so a refresh does not lose the hero."""
     code = g.to_code()
+    link = "1" if st.session_state.get("link_grade") else None
     if (st.query_params.get("hero") != code or st.query_params.get("name") != g.name
-            or st.query_params.get("grade") != g.grade):
+            or st.query_params.get("grade") != g.grade
+            or st.query_params.get("link") != link):
         st.query_params["hero"] = code
         st.query_params["name"] = g.name
         st.query_params["grade"] = g.grade
+        if link:
+            st.query_params["link"] = link
 
 
 def grades_offered():
@@ -632,9 +636,10 @@ SCREENS = {
 def main():
     if "link_grade" not in st.session_state:
         # First run of this visit. A ?grade= with no hero is a teacher's link;
-        # one next to a hero was written by sync_url and is not.
-        st.session_state.link_grade = (None if st.query_params.get("hero")
-                                       else st.query_params.get("grade"))
+        # one next to a hero was written by sync_url, and is the teacher's
+        # only if sync_url marked it with link=1 (so it survives a refresh).
+        teacher = not st.query_params.get("hero") or st.query_params.get("link")
+        st.session_state.link_grade = st.query_params.get("grade") if teacher else None
     if "game" not in st.session_state and st.query_params.get("hero"):
         # The page was refreshed or bookmarked: bring the hero back from the address.
         name = (st.query_params.get("name") or "Hero").strip()[:20] or "Hero"

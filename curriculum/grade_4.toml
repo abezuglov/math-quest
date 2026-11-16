@@ -336,11 +336,12 @@ tip      = "0.62 means 62 hundredths, or 62/100. To compare decimals, line up th
 
   [[topic.question]]
   levels  = [3, 4, 5]
-  kind    = "fraction"
+  kind    = "choice"
   vars    = { k = "randint(1, 99)" }
   where   = "gcd(k, 100) > 1"
   text    = "Write {k / 100|dec} as a fraction in simplest form."
   answer  = "k / 100"
+  choices = ["k / 100", "str(k) + '/100'", "str(k // gcd(k, 100)) + '/100'"]
   hint    = "{k / 100|dec} = {k}/100. Then divide top and bottom by {gcd(k, 100)}."
   explain = "{k}/100 = {answer}."
 

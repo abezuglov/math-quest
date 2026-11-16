@@ -723,11 +723,11 @@ def check_template(tpl: Template, topic_id: str, samples: int = 60, seed: int = 
                 try:
                     svg = pictures.for_question(q.picture)
                 except _CONTENT_ERRORS as e:
-                    svg = None
                     problems.append(f"{where}: picture {q.picture!r} failed: {e}")
-                if svg is None:
-                    problems.append(f"{where}: unknown picture {q.picture[0]!r} "
-                                    f"(use one of {pictures.PICTURE_KINDS})")
+                else:
+                    if svg is None:
+                        problems.append(f"{where}: unknown picture {q.picture[0]!r} "
+                                        f"(use one of {pictures.PICTURE_KINDS})")
             if problems:
                 return problems
     return problems

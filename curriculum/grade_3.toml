@@ -595,11 +595,12 @@ tip      = "Same bottom number? Compare the tops. Same top number? A bigger bott
 
   [[topic.question]]
   levels  = [4, 5]
-  kind    = "fraction"
+  kind    = "choice"
   vars    = { b = "choice([4, 6, 8, 9, 10, 12])", a = "randint(2, b - 1)" }
   where   = "gcd(a, b) > 1"
   text    = "Write {a}/{b} in simplest form."
   answer  = "a / b"
+  choices = ["a / b", "str(a) + '/' + str(b)", "str(a // gcd(a, b)) + '/' + str(b)"]
   hint    = "Divide the top and the bottom by {gcd(a, b)}."
   explain = "{a} ÷ {gcd(a, b)} = {a // gcd(a, b)} and {b} ÷ {gcd(a, b)} = {b // gcd(a, b)}: {answer}."
 
@@ -718,7 +719,8 @@ tip      = "Grams for light things, kilograms for heavy ones. Liters measure liq
 
   [[topic.question]]
   levels  = [4, 5]
-  vars    = { d = "randint(2, 9)", q = "randint(10, 99)" }
+  vars    = { d = "randint(2, 9)", q = "randint(3, 11)" }
+  where   = "d * q <= 100"
   text    = "{d * q} grams of rice are shared equally into {d} bags. How many grams in each bag?"
   answer  = "q"
   hint    = "{d} × ? = {d * q}"
@@ -807,10 +809,10 @@ tip      = "A quadrilateral is any shape with 4 straight sides. Squares, rectang
   kind    = "choice"
   vars    = { pool = "['square', 'rectangle', 'rhombus', 'trapezoid', 'parallelogram'][:2 + L]", s = "choice(pool)", others = "sample(pool, 2)" }
   where   = "s not in others"
-  text    = "What is this shape called?"
+  text    = "Which name fits this shape best?"
   answer  = "s"
   choices = ["s", "others[0]", "others[1]"]
-  hint    = "Are the sides equal? Are the corners square?"
+  hint    = "Are the sides equal? Are the corners square? Pick the name that tells the most."
   explain = "It is a {s}."
   picture = ["shape", "s"]
 

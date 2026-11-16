@@ -232,7 +232,7 @@ tip      = "Count both. The bigger count is more."
   levels  = [4, 5]
   kind    = "choice"
   vars    = { a = "randint(1, 10)", b = "randint(1, 10)" }
-  text    = "{a} and {b}: more, fewer, or the same?"
+  text    = "Is {a} more than, fewer than, or the same as {b}?"
   answer  = "'more' if a > b else 'fewer' if a < b else 'the same'"
   choices = ["'more'", "'fewer'", "'the same'"]
   shuffle = false
@@ -268,7 +268,7 @@ tip      = "Start with the bigger number. Count on the smaller one with your fin
   levels  = [4, 5]
   vars    = { a = "randint(2, 8)", b = "randint(1, 8)" }
   where   = "a + b <= 10"
-  text    = "{a} red dots and {b} blue dots. How many dots?"
+  text    = "{a} dots and {b} more dots. How many dots?"
   answer  = "a + b"
   hint    = "Count all the dots."
   explain = "{a} + {b} = {answer}."
@@ -330,7 +330,7 @@ tip      = "Start at the big number. Count back on your fingers."
 
   [[topic.question]]
   levels  = [2, 3, 4, 5]
-  vars    = { a = "randint(2, [4, 6, 8, 10, 10][L - 1])", b = "randint(1, [2, 3, 5, 9, 9][L - 1])", what = "choice(['birds', 'frogs', 'ducks', 'bees'])" }
+  vars    = { a = "randint(2, [4, 6, 8, 10, 10][L - 1])", b = "randint(1, [2, 3, 5, 9, 9][L - 1])", what = "choice(['birds', 'butterflies', 'ducks', 'bees'])" }
   where   = "b < a"
   text    = "{a} {what}. {b} fly away. How many are left?"
   answer  = "a - b"
