@@ -1,0 +1,787 @@
+# 5th grade: The Number Thief of Arithmos
+#
+# Levels: 1 = start of the year, 3 = standard, 5 = stretch.
+# Never reorder or delete topics (hero codes depend on the order); add at the end.
+# Decimal answers may have up to 3 places in 5th grade (thousandths).
+
+grade = "5"
+name  = "5th grade"
+
+# ---------------------------------------------------------------------------
+[[region]]
+key    = "village"
+name   = "Market Village"
+gem    = "Gem of Sums"
+topics = ["g5_decimals", "g5_dec_ops"]
+task   = "coins"
+task_topic = "g5_dec_ops"
+  [[region.encounter]]
+  slot  = 0
+  intro = "My price signs are blank, and every price has a decimal point! Help me read them."
+
+[[region]]
+key    = "mines"
+name   = "Multiplication Mines"
+gem    = "Gem of Times"
+topics = ["g5_powers10", "g5_mult"]
+task   = "multiples"
+task_topic = "g5_mult"
+  [[region.encounter]]
+  slot  = 1
+  intro = "I need to know how many lamps to light in every tunnel. Help me multiply."
+
+[[region]]
+key    = "docks"
+name   = "Division Docks"
+gem    = "Gem of Shares"
+topics = ["g5_div", "g5_convert"]
+task   = "share"
+task_topic = "g5_div"
+  [[region.encounter]]
+  slot  = 1
+  intro = "I've got fish to split between the boats, and ropes to measure. Can you help?"
+
+[[region]]
+key    = "forest"
+name   = "Fraction Forest"
+gem    = "Gem of Parts"
+topics = ["g5_frac_add", "g5_frac_mult", "g5_frac_div"]
+task   = "shade"
+task_topic = "g5_frac_add"
+  [[region.encounter]]
+  slot  = 0
+  intro = "My recipes are full of fractions, and none of the parts match! Help me with the pieces."
+
+[[region]]
+key    = "castle"
+name   = "Castle Builders"
+gem    = "Gem of Measures"
+topics = ["g5_volume", "g5_coords"]
+task   = "garden"
+task_topic = "g5_volume"
+  [[region.encounter]]
+  slot  = 1
+  intro = "The Queen's plans are drawn on a grid, and every room needs filling. Help me measure!"
+
+[[region]]
+key    = "peak"
+name   = "Dragon's Peak"
+gem    = "Gem of Wisdom"
+topics = ["g5_expressions"]
+mix    = true
+final  = true
+task   = "ledger"
+task_topic = "g5_expressions"
+  [[region.encounter]]
+  slot  = 0
+  intro = "Up here, the order of the steps matters. Parentheses first. Think slowly."
+
+# ---------------------------------------------------------------------------
+[[topic]]
+id       = "g5_decimals"
+label    = "Decimals to thousandths"
+standard = "5.NBT.A.3-4"
+tip      = "Line up the decimal points. Compare the tenths first, then the hundredths, then the thousandths."
+
+  [[topic.question]]
+  kind    = "decimal"
+  vars    = { z = "[choice([1, 2]), 2, 3, 3, 3][L - 1]", p = "10 ** z", k = "randint(1, p - 1)" }
+  text    = "Write {k}/{p|plain} as a decimal."
+  answer  = "k / p"
+  hint    = "{['', 'Tenths have one digit', 'Hundredths have two digits', 'Thousandths have three digits'][z]} after the point."
+  explain = "{k}/{p|plain} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { m = "randint(1001, 9999)", i = "randint(0, 1 if L == 1 else 2)" }
+  where   = "different(digit(m, 1000), digit(m, 100), digit(m, 10), digit(m, 1))"
+  text    = "In {m / 1000|dec}, which digit is in the {['tenths', 'hundredths', 'thousandths'][i]} place?"
+  answer  = "digit(m, [100, 10, 1][i])"
+  hint    = "After the point come tenths, then hundredths, then thousandths."
+  explain = "In {m / 1000|dec}: tenths {digit(m, 100)}, hundredths {digit(m, 10)}, thousandths {digit(m, 1)}. The answer is {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(1, 99) / 100", b = "randint(1, 999) / 1000" }
+  where   = "L < 4 or int(a * 10) == int(b * 10)"
+  text    = "{a|dec} ? {b|dec}   Which sign goes in the middle?"
+  answer  = "compare(a, b)"
+  choices = ["'<'", "'>'", "'='"]
+  shuffle = false
+  hint    = "Write both as thousandths: {plain(a * 1000)} thousandths and {plain(b * 1000)} thousandths."
+  explain = "{a|dec} is {plain(a * 1000)} thousandths and {b|dec} is {plain(b * 1000)} thousandths, so {a|dec} {answer} {b|dec}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "decimal"
+  vars    = { a = "randint(1, 9 * L)", b = "randint(1, 9)", c = "randint(0 if L >= 4 else 1, 9)", d = "randint(1, 9)" }
+  text    = "{a} + {b}/10 + {c}/100 + {d}/1000 = ? (write a decimal)"
+  answer  = "a + b / 10 + c / 100 + d / 1000"
+  hint    = "Each fraction gets its own place: tenths, hundredths, thousandths."
+  explain = "{a} + {b / 10|dec} + {c / 100|dec} + {d / 1000|dec} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "decimal"
+  vars    = { m = "randint(1001, 99999)", i = "randint(0, 2)" }
+  where   = "m % 10 != 0 and (L >= 4 or digit(m, [100, 10, 1][i]) != 5)"
+  text    = "Round {m / 1000|dec} to the nearest {['whole number', 'tenth', 'hundredth'][i]}."
+  answer  = "round_to(m, [1000, 100, 10][i]) / 1000"
+  hint    = "Look at the {['tenths', 'hundredths', 'thousandths'][i]} digit: {digit(m, [100, 10, 1][i])}. 5 or more rounds up."
+  explain = "The {['tenths', 'hundredths', 'thousandths'][i]} digit is {digit(m, [100, 10, 1][i])}, so {m / 1000|dec} rounds to {answer|dec}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { x = "randint(1, 9) / 10", y = "randint(10, 99) / 100", z = "randint(100, 999) / 1000", s = "reversed(sorted([x, y, z]))" }
+  where   = "different(x, y, z)"
+  text    = "Which number is the greatest?"
+  answer  = "dec_text(s[0])"
+  choices = ["dec_text(x)", "dec_text(y)", "dec_text(z)"]
+  hint    = "More digits does not mean bigger. Compare the tenths first."
+  explain = "From greatest to least: {dec_text(s[0])} > {dec_text(s[1])} > {dec_text(s[2])}."
+
+[[topic]]
+id       = "g5_dec_ops"
+label    = "Adding, subtracting, multiplying and dividing decimals"
+standard = "5.NBT.B.7"
+tip      = "To add or subtract, line up the decimal points. To multiply, multiply as whole numbers, then put back as many digits after the point as the numbers had."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  kind    = "decimal"
+  vars    = { ka = "randint(11, 99 * L)", kb = "randint(101, 999)", a = "ka / 10", b = "kb / 100" }
+  where   = "ka % 10 != 0 and kb % 10 != 0"
+  text    = "{a|dec} + {b|dec} = ?"
+  answer  = "a + b"
+  hint    = "Line up the decimal points. Add hundredths, then tenths, then ones."
+  explain = "{a|dec} + {b|dec} = {answer|dec}."
+
+  [[topic.question]]
+  kind    = "decimal"
+  vars    = { ka = "randint(201, 999 + 500 * L)", tenths = "coin()", kb = "randint(11, 99) if tenths else randint(101, 999)", a = "ka / 100", b = "kb / (10 if tenths else 100)" }
+  where   = "a > b and ka % 10 != 0 and kb % 10 != 0"
+  text    = "{a|dec} − {b|dec} = ?"
+  answer  = "a - b"
+  hint    = "Line up the decimal points. Borrow when a digit is too small."
+  explain = "{a|dec} − {b|dec} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "decimal"
+  vars    = { p1 = "randint(105, 999) / 100", p2 = "randint(105, 999) / 100", who = "name()" }
+  text    = "{who} buys a book for {p1|money} and a pen for {p2|money}, and pays with a $20 bill. How much change?"
+  answer  = "20 - p1 - p2"
+  hint    = "First add the prices. Then subtract the total from $20.00."
+  explain = "{p1|money} + {p2|money} = {p1 + p2|money}. $20.00 − {p1 + p2|money} = {answer|money}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "decimal"
+  vars    = { k = "randint(11, 99)", d = "choice([10, 100]) if L >= 3 else 10", n = "randint(2, 9)" }
+  where   = "k % 10 != 0"
+  text    = "{n} × {k / d|dec} = ?"
+  answer  = "n * k / d"
+  hint    = "{n} × {k} = {n * k}. Then put back {1 if d == 10 else 2} {'digit' if d == 10 else 'digits'} after the point."
+  explain = "{n} × {k} = {n * k}, so {n} × {k / d|dec} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "decimal"
+  vars    = { k = "randint(11, 99)", d = "choice([10, 100])", n = "randint(2, 9)" }
+  where   = "k % 10 != 0"
+  text    = "{n * k / d|dec} ÷ {n} = ?"
+  answer  = "k / d"
+  hint    = "Divide as whole numbers: {n * k} ÷ {n}. Then put the point back in the same place."
+  explain = "{n * k} ÷ {n} = {k}, so {n * k / d|dec} ÷ {n} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "decimal"
+  vars    = { p = "randint(2, 9)", q = "randint(11, 99)" }
+  where   = "q % 10 != 0"
+  text    = "{p / 10|dec} × {q / 10|dec} = ?"
+  answer  = "p * q / 100"
+  hint    = "{p} × {q} = {p * q}. The two numbers have 2 digits after their points in all, so put back 2."
+  explain = "{p} × {q} = {p * q}, so {p / 10|dec} × {q / 10|dec} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [5]
+  vars    = { p = "randint(2, 9)", q = "randint(2, 9)" }
+  text    = "{p * q / 10|dec} ÷ {q / 10|dec} = ?"
+  answer  = "p"
+  hint    = "Multiply both numbers by 10. Then it is {p * q} ÷ {q}."
+  explain = "{p * q} ÷ {q} = {answer}, so {p * q / 10|dec} ÷ {q / 10|dec} = {answer}."
+
+[[topic]]
+id       = "g5_powers10"
+label    = "Powers of ten"
+standard = "5.NBT.A.1-2"
+tip      = "Each place is 10 times the place to its right. Times 10 moves every digit one place left; divided by 10 moves every digit one place right."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { n = "randint(2, [9, 99, 999][L - 1])", z = "randint(1, 3)", p = "10 ** z" }
+  text    = "{n} × {p} = ?"
+  answer  = "n * p"
+  hint    = "Times {p} puts {z} {'zero' if z == 1 else 'zeros'} on the end."
+  explain = "{n} × {p} = {answer}."
+
+  [[topic.question]]
+  levels  = [1, 2, 3, 4]
+  vars    = { n = "randint(2, [9, 99, 999, 999][L - 1])", z = "randint(1, 3)", p = "10 ** z" }
+  text    = "{n * p} ÷ {p} = ?"
+  answer  = "n"
+  hint    = "Divided by {p} takes {z} {'zero' if z == 1 else 'zeros'} off the end."
+  explain = "{n * p} ÷ {p} = {answer}."
+
+  [[topic.question]]
+  levels  = [1, 2]
+  vars    = { n = "randint(2, 99)", z = "randint(1, 3)", p = "10 ** z" }
+  text    = "{n} × ? = {n * p}"
+  answer  = "p"
+  hint    = "Count the zeros that were added to {n}."
+  explain = "{n} × {answer} = {n * p}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "decimal"
+  vars    = { k = "randint(11, 9999)", z = "randint(1, 3)", p = "10 ** z" }
+  where   = "k % 10 != 0"
+  text    = "{k / 1000|dec} × {p} = ?"
+  answer  = "k * p / 1000"
+  hint    = "Move every digit {z} {'place' if z == 1 else 'places'} to the left."
+  explain = "{k / 1000|dec} × {p} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "decimal"
+  vars    = { k = "randint(11, 9999)", z = "randint(1, 3)", p = "10 ** z" }
+  where   = "k % 10 != 0"
+  text    = "{k * p / 1000|dec} ÷ {p} = ?"
+  answer  = "k / 1000"
+  hint    = "Move every digit {z} {'place' if z == 1 else 'places'} to the right."
+  explain = "{k * p / 1000|dec} ÷ {p} = {answer|dec}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(2, 9)", z = "randint(2, 6)", sup = "['', '¹', '²', '³', '⁴', '⁵', '⁶'][z]" }
+  text    = "{n} × 10{sup} = ?"
+  answer  = "n * 10 ** z"
+  hint    = "10{sup} is 1 followed by {z} zeros."
+  explain = "10{sup} = {10 ** z}, so {n} × 10{sup} = {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { d = "randint(1, 9)", a = "randint(1, 3)", b = "a + (1 if L == 4 else choice([1, 2]))" }
+  text    = "The {d} in {d * 10 ** b} is how many times the {d} in {d * 10 ** a}?"
+  answer  = "10 ** (b - a)"
+  hint    = "Each place to the left is 10 times bigger. How many places apart are the two {d}s?"
+  explain = "{d * 10 ** b} ÷ {d * 10 ** a} = {answer}."
+
+[[topic]]
+id       = "g5_mult"
+label    = "Multi-digit multiplication"
+standard = "5.NBT.B.5"
+tip      = "Multiply by the ones digit, then by the tens (write a 0 first), then add the rows."
+
+  [[topic.question]]
+  vars    = { a = "randint([12, 100, 100, 1000, 1000][L - 1], [99, 999, 999, 9999, 9999][L - 1])", b = "randint([2, 2, 11, 11, 11][L - 1], [9, 9, 99, 99, 99][L - 1])" }
+  where   = "b < 10 or b % 10 != 0"
+  text    = "{a} × {b} = ?"
+  answer  = "a * b"
+  hint    = "{'Multiply the ones, then the tens, carrying as you go.' if b < 10 else 'Find ' + str(a) + ' × ' + str(b - b % 10) + ' and ' + str(a) + ' × ' + str(b % 10) + ', then add.'}"
+  explain = "{'' if b < 10 else str(a) + ' × ' + str(b - b % 10) + ' = ' + str(a * (b - b % 10)) + ' and ' + str(a) + ' × ' + str(b % 10) + ' = ' + str(a * (b % 10)) + '. '}{a} × {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { r = "randint(12, 45)", s = "randint(3, 9) if L == 2 else randint(12, 38)" }
+  text    = "A stadium has {r} rows with {s} seats in each row. How many seats are there?"
+  answer  = "r * s"
+  hint    = "{r} rows of {s}: multiply {r} × {s}."
+  explain = "{r} × {s} = {answer} seats."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(24, 144)", b = "randint(12, 48)", what = "choice(['pencils', 'crayons', 'markers', 'stickers'])" }
+  text    = "A box holds {n} {what}. How many {what} are in {b} boxes?"
+  answer  = "n * b"
+  hint    = "{b} boxes of {n}: multiply {n} × {b}."
+  explain = "{n} × {b} = {answer} {what}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4]
+  kind    = "choice"
+  vars    = { a = "randint(12, 99)", b = "randint(13, 49)", t = "b - b % 10", o = "b % 10" }
+  where   = "o != 0"
+  text    = "Which is the same as {a} × {b}?"
+  answer  = "'(' + str(a) + ' × ' + str(t) + ') + (' + str(a) + ' × ' + str(o) + ')'"
+  choices = ["'(' + str(a) + ' × ' + str(t) + ') + (' + str(a) + ' × ' + str(o) + ')'", "'(' + str(a) + ' × ' + str(t) + ') + ' + str(o)", "'(' + str(a) + ' + ' + str(t) + ') × ' + str(o)"]
+  hint    = "Split {b} into {t} + {o}. Both parts must be multiplied by {a}."
+  explain = "{a} × {b} = {a} × {t} + {a} × {o} = {a * t} + {a * o} = {a * b}."
+
+[[topic]]
+id       = "g5_div"
+label    = "Division with 2-digit divisors"
+standard = "5.NBT.B.6"
+tip      = "Estimate first: how many times does the divisor fit? Then multiply, subtract and bring down the next digit."
+
+  [[topic.question]]
+  vars    = { q = "randint([12, 100, 12, 21, 100][L - 1], [99, 999, 49, 99, 250][L - 1])", d = "randint([2, 2, 11, 11, 21][L - 1], [9, 9, 25, 49, 99][L - 1])" }
+  text    = "{q * d} ÷ {d} = ?"
+  answer  = "q"
+  hint    = "Try a multiple of 10 first: {d} × {10 * (q // 10)} = {d * 10 * (q // 10)}."
+  explain = "{d} × {answer} = {q * d}, so {q * d} ÷ {d} = {answer}."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { q = "randint(12, 60)", d = "randint(3, 25)" }
+  text    = "{d} × ? = {q * d}"
+  answer  = "q"
+  hint    = "Divide: {q * d} ÷ {d}."
+  explain = "{d} × {answer} = {q * d}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { q = "randint(5, 30)", d = "randint(12, 48)" }
+  text    = "{q * d} students ride buses. Each bus holds {d} students, and every bus is full. How many buses are there?"
+  answer  = "q"
+  hint    = "Divide: {q * d} ÷ {d}."
+  explain = "{q * d} ÷ {d} = {answer} buses."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(100, 999)", d = "choice([12, 18, 24, 30])" }
+  where   = "n % d != 0"
+  text    = "{n} eggs are packed in cartons of {d}. How many cartons are full?"
+  answer  = "n // d"
+  hint    = "Divide {n} by {d}. The leftover eggs do not fill a carton."
+  explain = "{n} ÷ {d} = {n // d} R {n % d}, so {answer} cartons are full and {n % d} eggs are left over."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { n = "randint(100, 600)", d = "choice([12, 14, 15, 16])" }
+  where   = "n % d != 0"
+  text    = "{n} people go on a trip. Each van holds {d} people. How many vans are needed so that everyone can go?"
+  answer  = "n // d + 1"
+  hint    = "Divide {n} by {d}. Do the people left over need a van too?"
+  explain = "{n} ÷ {d} = {n // d} R {n % d}. The {n % d} left over need one more van: {answer} vans."
+
+[[topic]]
+id       = "g5_convert"
+label    = "Converting units"
+standard = "5.MD.A.1"
+tip      = "Big unit to small unit: multiply. Small unit to big unit: divide. 1 m = 100 cm, 1 km = 1,000 m, 1 kg = 1,000 g, 1 L = 1,000 mL, 1 ft = 12 in, 1 yd = 3 ft, 1 lb = 16 oz, 1 gal = 4 qt."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { u = "choice([['meters', 'meter', 'centimeters', 100], ['kilometers', 'kilometer', 'meters', 1000], ['kilograms', 'kilogram', 'grams', 1000], ['liters', 'liter', 'milliliters', 1000], ['feet', 'foot', 'inches', 12], ['yards', 'yard', 'feet', 3], ['pounds', 'pound', 'ounces', 16], ['gallons', 'gallon', 'quarts', 4]])", n = "randint(2, 3 * L + 3)" }
+  text    = "{n} {u[0]} = how many {u[2]}?"
+  answer  = "n * u[3]"
+  hint    = "1 {u[1]} = {u[3]} {u[2]}. Big to small: multiply."
+  explain = "1 {u[1]} = {u[3]} {u[2]}, so {n} × {u[3]} = {answer} {u[2]}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { u = "choice([['meters', 'meter', 'centimeters', 100], ['kilometers', 'kilometer', 'meters', 1000], ['kilograms', 'kilogram', 'grams', 1000], ['liters', 'liter', 'milliliters', 1000], ['feet', 'foot', 'inches', 12], ['yards', 'yard', 'feet', 3], ['pounds', 'pound', 'ounces', 16], ['gallons', 'gallon', 'quarts', 4]])", n = "randint(2, 3 * L + 3)" }
+  text    = "{n * u[3]} {u[2]} = how many {u[0]}?"
+  answer  = "n"
+  hint    = "1 {u[1]} = {u[3]} {u[2]}. Small to big: divide."
+  explain = "{n * u[3]} ÷ {u[3]} = {answer} {u[0]}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { u = "choice([['meters', 'meter', 'centimeters', 100], ['kilometers', 'kilometer', 'meters', 1000], ['kilograms', 'kilogram', 'grams', 1000], ['liters', 'liter', 'milliliters', 1000]])", k = "randint(11, 10 * u[3] - 1)" }
+  where   = "k % u[3] != 0"
+  text    = "{k / u[3]|dec} {u[0]} = how many {u[2]}?"
+  answer  = "k"
+  hint    = "1 {u[1]} = {u[3]} {u[2]}. Multiply {k / u[3]|dec} × {u[3]}."
+  explain = "{k / u[3]|dec} × {u[3]} = {answer} {u[2]}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { u = "choice([['feet', 'foot', 'inches', 12, 'inch'], ['yards', 'yard', 'feet', 3, 'foot'], ['pounds', 'pound', 'ounces', 16, 'ounce'], ['gallons', 'gallon', 'quarts', 4, 'quart']])", a = "randint(2, 9)", b = "randint(1, u[3] - 1)" }
+  text    = "{a} {u[0]} {b} {u[2] if b > 1 else u[4]} = how many {u[2]}?"
+  answer  = "a * u[3] + b"
+  hint    = "Change the {u[0]} first: {a} × {u[3]}. Then add {b}."
+  explain = "{a} × {u[3]} = {a * u[3]}, and {a * u[3]} + {b} = {answer} {u[2]}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "decimal"
+  vars    = { u = "choice([['meters', 'meter', 'centimeters', 100], ['kilometers', 'kilometer', 'meters', 1000], ['kilograms', 'kilogram', 'grams', 1000], ['liters', 'liter', 'milliliters', 1000]])", k = "randint(11, 10 * u[3] - 1)" }
+  where   = "k % u[3] != 0"
+  text    = "{k} {u[2]} = how many {u[0]}? (write a decimal)"
+  answer  = "k / u[3]"
+  hint    = "1 {u[1]} = {u[3]} {u[2]}. Small to big: divide by {u[3]}."
+  explain = "{k} ÷ {u[3]} = {answer|dec} {u[0]}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { n = "randint(3, 9)", c = "randint(5, 30)", who = "name()" }
+  text    = "A ribbon is {n} feet long. {who} cuts off {c} inches. How many inches of ribbon are left?"
+  answer  = "n * 12 - c"
+  hint    = "First change {n} feet to inches: {n} × 12."
+  explain = "{n} × 12 = {n * 12} inches, and {n * 12} − {c} = {answer} inches."
+
+[[topic]]
+id       = "g5_frac_add"
+label    = "Adding and subtracting fractions"
+standard = "5.NF.A.1-2"
+tip      = "Make the bottom numbers the same first: find a common multiple. Then add or subtract the top numbers."
+
+  [[topic.question]]
+  levels  = [1, 2]
+  kind    = "fraction"
+  vars    = { b = "choice([2, 3, 4, 5])", k = "choice([2, 3])", d = "b * k", a = "randint(1, b - 1)", c = "randint(1, d - 1)" }
+  where   = "d <= 12 and gcd(a, b) == 1 and gcd(c, d) == 1"
+  text    = "{a}/{b} + {c}/{d} = ?"
+  answer  = "a / b + c / d"
+  hint    = "Change {a}/{b} to {d}ths: {a}/{b} = {a * k}/{d}."
+  explain = "{a * k}/{d} + {c}/{d} = {a * k + c}/{d}{'' if gcd(a * k + c, d) == 1 and a * k + c < d else ' = ' + fmt(answer)}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "fraction"
+  vars    = { bd = "sample([2, 3, 4, 5, 6, 8, 10, 12], 2)", b = "bd[0]", d = "bd[1]", m = "lcm(b, d)", a = "randint(1, b - 1)", c = "randint(1, d - 1)" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1"
+  text    = "{a}/{b} + {c}/{d} = ?"
+  answer  = "a / b + c / d"
+  hint    = "Use {m} as the bottom number: {a}/{b} = {a * (m // b)}/{m} and {c}/{d} = {c * (m // d)}/{m}."
+  explain = "{a * (m // b)}/{m} + {c * (m // d)}/{m} = {a * (m // b) + c * (m // d)}/{m}{'' if gcd(a * (m // b) + c * (m // d), m) == 1 and a * (m // b) + c * (m // d) < m else ' = ' + fmt(answer)}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "fraction"
+  vars    = { bd = "sample([2, 3, 4, 5, 6, 8, 10, 12], 2)", b = "bd[0]", d = "bd[1]", m = "lcm(b, d)", a = "randint(1, b - 1)", c = "randint(1, d - 1)" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1 and a / b > c / d"
+  text    = "{a}/{b} − {c}/{d} = ?"
+  answer  = "a / b - c / d"
+  hint    = "Use {m} as the bottom number: {a}/{b} = {a * (m // b)}/{m} and {c}/{d} = {c * (m // d)}/{m}."
+  explain = "{a * (m // b)}/{m} − {c * (m // d)}/{m} = {a * (m // b) - c * (m // d)}/{m}{'' if gcd(a * (m // b) - c * (m // d), m) == 1 and a * (m // b) - c * (m // d) < m else ' = ' + fmt(answer)}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "fraction"
+  vars    = { bd = "sample([2, 3, 4, 5, 6, 8, 10, 12], 2)", b = "bd[0]", d = "bd[1]", a = "randint(1, b - 1)", c = "randint(1, d - 1)", who = "name()" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1"
+  text    = "{who} walked {a}/{b} of a mile in the morning and {c}/{d} of a mile after lunch. How far did {who} walk in all?"
+  answer  = "a / b + c / d"
+  hint    = "Add {a}/{b} + {c}/{d}. Make the bottom numbers the same first: use {lcm(b, d)}."
+  explain = "{a}/{b} + {c}/{d} = {answer} miles."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "fraction"
+  vars    = { bd = "sample([2, 3, 4, 5, 6, 8, 10, 12], 2)", b = "bd[0]", d = "bd[1]", a = "randint(1, b - 1)", c = "randint(1, d - 1)", w1 = "randint(1, 5)", w2 = "randint(1, 5)" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1"
+  text    = "{w1} {a}/{b} + {w2} {c}/{d} = ?"
+  answer  = "w1 + a / b + w2 + c / d"
+  hint    = "Add the whole numbers ({w1} + {w2} = {w1 + w2}), then add the fractions."
+  explain = "{w1} + {w2} = {w1 + w2}, and {a}/{b} + {c}/{d} = {a / b + c / d}. Together: {answer}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "fraction"
+  vars    = { bd = "sample([2, 3, 4, 5, 6, 8, 10, 12], 2)", b = "bd[0]", d = "bd[1]", m = "lcm(b, d)", a = "randint(1, b - 1)", c = "randint(1, d - 1)", w1 = "randint(3, 8)", w2 = "randint(1, w1 - 1)" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1 and (L == 5 or a / b > c / d)"
+  text    = "{w1} {a}/{b} − {w2} {c}/{d} = ?"
+  answer  = "w1 + a / b - w2 - c / d"
+  hint    = "Write both fractions with bottom number {m}. If the first fraction is smaller, borrow 1 whole from {w1}."
+  explain = "{w1} {a}/{b} − {w2} {c}/{d} = {answer}."
+
+[[topic]]
+id       = "g5_frac_mult"
+label    = "Multiplying fractions"
+standard = "5.NF.B.4-6"
+tip      = "Multiply the tops, then multiply the bottoms. To find a fraction of a number, divide by the bottom, then multiply by the top."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { b = "choice([2, 3, 4, 5, 6, 8, 10])", a = "randint(1, b - 1)", n = "b * randint(2, 3 * L)" }
+  where   = "gcd(a, b) == 1"
+  text    = "{a}/{b} of {n} = ?"
+  answer  = "a * n / b"
+  hint    = "{n} ÷ {b} = {n // b}. Then multiply by {a}."
+  explain = "{n} ÷ {b} = {n // b}, and {n // b} × {a} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "fraction"
+  vars    = { b = "randint(3, 9)", a = "randint(1, b - 1)", n = "randint(2, 9)" }
+  where   = "gcd(a, b) == 1 and n % b != 0"
+  text    = "{a}/{b} × {n} = ?"
+  answer  = "a * n / b"
+  hint    = "Multiply the top by {n}: {a} × {n} = {a * n}. The bottom stays {b}."
+  explain = "{a}/{b} × {n} = {a * n}/{b}{'' if gcd(a * n, b) == 1 and a * n < b else ' = ' + fmt(answer)}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "fraction"
+  vars    = { b = "randint(2, 9)", d = "randint(2, 9)", a = "randint(1, b - 1)", c = "randint(1, d - 1)" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1"
+  text    = "{a}/{b} × {c}/{d} = ?"
+  answer  = "a / b * (c / d)"
+  hint    = "Top × top: {a} × {c}. Bottom × bottom: {b} × {d}."
+  explain = "{a}/{b} × {c}/{d} = {a * c}/{b * d}{'' if gcd(a * c, b * d) == 1 and a * c < b * d else ' = ' + fmt(answer)}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "fraction"
+  vars    = { b = "choice([2, 3, 4])", a = "randint(1, b - 1)", d = "choice([2, 3, 4])", c = "randint(1, d - 1)", who = "name()" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1"
+  text    = "A recipe uses {a}/{b} cup of sugar. {who} makes {c}/{d} of the recipe. How much sugar does {who} need?"
+  answer  = "a / b * (c / d)"
+  hint    = "Find {c}/{d} of {a}/{b}: multiply {c}/{d} × {a}/{b}."
+  explain = "{c}/{d} × {a}/{b} = {a * c}/{b * d}{'' if gcd(a * c, b * d) == 1 and a * c < b * d else ' = ' + fmt(answer)} cup."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "fraction"
+  vars    = { b = "randint(2, 6)", d = "randint(2, 6)", a = "randint(1, 2 * b)", c = "randint(1, d - 1)" }
+  where   = "gcd(a, b) == 1 and gcd(c, d) == 1 and a != b"
+  text    = "A rug is {a}/{b} meter long and {c}/{d} meter wide. What is its area in square meters?"
+  answer  = "a / b * (c / d)"
+  hint    = "Area = length × width = {a}/{b} × {c}/{d}."
+  explain = "{a}/{b} × {c}/{d} = {a * c}/{b * d}{'' if gcd(a * c, b * d) == 1 and a * c < b * d else ' = ' + fmt(answer)} square meters."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { b = "randint(2, 9)", a = "randint(1, 2 * b)", n = "randint(6, 40)" }
+  where   = "a != b and gcd(a, b) == 1"
+  text    = "Do not multiply. Is {n} × {a}/{b} bigger or smaller than {n}?"
+  answer  = "'bigger than ' + str(n) if a > b else 'smaller than ' + str(n)"
+  choices = ["'bigger than ' + str(n)", "'smaller than ' + str(n)", "'equal to ' + str(n)"]
+  shuffle = false
+  hint    = "Is {a}/{b} more than 1 or less than 1?"
+  explain = "{a}/{b} is {'more' if a > b else 'less'} than 1, so {n} × {a}/{b} is {answer}."
+
+[[topic]]
+id       = "g5_frac_div"
+label    = "Fractions and division"
+standard = "5.NF.B.3, 5.NF.B.7"
+tip      = "a ÷ b is the fraction a/b. To divide by a unit fraction like 1/3, ask how many of those pieces fit."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  kind    = "fraction"
+  vars    = { n = "randint(1, 3 * L + 2)", k = "randint(2, 8)" }
+  where   = "n % k != 0"
+  text    = "{plural(n, 'pizza')} {'is' if n == 1 else 'are'} shared equally by {k} friends. How much pizza does each friend get?"
+  answer  = "n / k"
+  hint    = "Each friend gets {n} ÷ {k}, and {n} ÷ {k} is the fraction {n}/{k}."
+  explain = "{n} ÷ {k} = {n}/{k}. Each friend gets {answer} of a pizza."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  kind    = "fraction"
+  vars    = { n = "randint(1, 3 * L + 4)", k = "randint(2, 9)" }
+  where   = "n % k != 0"
+  text    = "{n} ÷ {k} = ? (write a fraction)"
+  answer  = "n / k"
+  hint    = "The number you divide goes on top, the number you divide by goes on the bottom."
+  explain = "{n} ÷ {k} = {n}/{k}{'' if gcd(n, k) == 1 and n < k else ' = ' + fmt(answer)}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "fraction"
+  vars    = { b = "randint(2, 8)", n = "randint(2, 6)" }
+  text    = "1/{b} ÷ {n} = ?"
+  answer  = "1 / b / n"
+  hint    = "Cut 1/{b} into {n} equal parts. How big is each part of the whole?"
+  explain = "1/{b} ÷ {n} = 1/{b * n}, because {n} parts of 1/{b * n} make 1/{b}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { b = "randint(2, 8)", n = "randint(2, 9)" }
+  text    = "{n} ÷ 1/{b} = ?"
+  answer  = "n * b"
+  hint    = "How many pieces of 1/{b} fit in 1 whole? {b}. How many fit in {n} wholes?"
+  explain = "There are {b} pieces of 1/{b} in each whole, so {n} × {b} = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { n = "randint(2, 8)", b = "randint(2, 6)", who = "name()" }
+  text    = "{who} has {n} feet of ribbon and cuts it into pieces 1/{b} foot long. How many pieces does {who} get?"
+  answer  = "n * b"
+  hint    = "Each foot makes {b} pieces."
+  explain = "{n} ÷ 1/{b} = {n} × {b} = {answer} pieces."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "fraction"
+  vars    = { b = "randint(2, 6)", k = "randint(2, 5)" }
+  text    = "{k} friends share 1/{b} of a pan of brownies equally. What fraction of the whole pan does each friend get?"
+  answer  = "1 / b / k"
+  hint    = "Divide 1/{b} by {k}."
+  explain = "1/{b} ÷ {k} = 1/{b * k} of the pan."
+
+[[topic]]
+id       = "g5_volume"
+label    = "Volume"
+standard = "5.MD.C.3-5"
+tip      = "Volume = length × width × height. Count the cubes in one layer, then multiply by the number of layers."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { l = "randint(2, 2 + L)", w = "randint(2, 1 + L)", h = "randint(2, 2 + L)" }
+  text    = "How many unit cubes make this box?"
+  answer  = "l * w * h"
+  hint    = "One layer has {l} × {w} = {l * w} cubes. There are {h} layers."
+  explain = "{l} × {w} × {h} = {answer} cubes."
+  picture = ["cubes", "l", "w", "h"]
+
+  [[topic.question]]
+  vars    = { l = "randint(2, 3 + 2 * L)", w = "randint(2, 3 + 2 * L)", h = "randint(2, 3 + L)" }
+  text    = "A box is {l} cm long, {w} cm wide and {h} cm tall. What is its volume in cubic centimeters?"
+  answer  = "l * w * h"
+  hint    = "Volume = length × width × height."
+  explain = "{l} × {w} × {h} = {answer} cubic centimeters."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { l = "randint(2, 10)", w = "randint(2, 8)", h = "randint(2, 9)" }
+  text    = "A box has a volume of {l * w * h} cubic feet. It is {l} feet long and {w} feet wide. How tall is it?"
+  answer  = "h"
+  hint    = "One layer is {l} × {w} = {l * w} cubic feet. How many layers make {l * w * h}?"
+  explain = "{l * w * h} ÷ {l * w} = {answer} feet."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { b = "randint(20, 120)", h = "randint(6, 20)" }
+  text    = "The bottom of a fish tank has an area of {b} square inches. The tank is {h} inches tall. What is its volume in cubic inches?"
+  answer  = "b * h"
+  hint    = "Volume = area of the bottom × height."
+  explain = "{b} × {h} = {answer} cubic inches."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(2, 6)", b = "randint(2, 6)", c = "randint(2, 6)", d = "randint(2, 8)", e = "randint(2, 8)", f = "randint(2, 8)" }
+  text    = "Two boxes are stacked. One is {a} ft by {b} ft by {c} ft. The other is {d} ft by {e} ft by {f} ft. What is their total volume in cubic feet?"
+  answer  = "a * b * c + d * e * f"
+  hint    = "Find the volume of each box, then add."
+  explain = "{a} × {b} × {c} = {a * b * c} and {d} × {e} × {f} = {d * e * f}. Together: {answer} cubic feet."
+
+[[topic]]
+id       = "g5_coords"
+label    = "The coordinate plane"
+standard = "5.G.A.1-2"
+tip      = "Start at 0. Go across first (that is x), then up (that is y). The point is written (x, y)."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  kind    = "choice"
+  vars    = { x = "randint(1, 10)", y = "randint(1, 9)" }
+  where   = "x != y"
+  text    = "Which ordered pair names the red point?"
+  answer  = "'(' + str(x) + ', ' + str(y) + ')'"
+  choices = ["'(' + str(x) + ', ' + str(y) + ')'", "'(' + str(y) + ', ' + str(x) + ')'", "'(' + str(x) + ', ' + str(y + 1) + ')'"]
+  hint    = "Across first, then up."
+  explain = "The point is {x} across and {y} up: {answer}."
+  picture = ["grid_point", "x", "y"]
+
+  [[topic.question]]
+  vars    = { x = "randint(0, 10)", y = "randint(0, 10)", ax = "coin()" }
+  where   = "x != y"
+  text    = "What is the {'x' if ax else 'y'}-coordinate of the red point?"
+  answer  = "x if ax else y"
+  hint    = "{'x tells how far across.' if ax else 'y tells how far up.'}"
+  explain = "The point is ({x}, {y}), so its {'x' if ax else 'y'}-coordinate is {answer}."
+  picture = ["grid_point", "x", "y"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  kind    = "choice"
+  vars    = { x = "randint(0, 6)", y = "randint(0, 6)", r = "randint(1, 4)", u = "randint(1, 4)" }
+  where   = "r != u"
+  text    = "A point at ({x}, {y}) moves {r} right and {u} up. Where is it now?"
+  answer  = "'(' + str(x + r) + ', ' + str(y + u) + ')'"
+  choices = ["'(' + str(x + r) + ', ' + str(y + u) + ')'", "'(' + str(x + u) + ', ' + str(y + r) + ')'", "'(' + str(x + r) + ', ' + str(y) + ')'"]
+  hint    = "Moving right adds to x. Moving up adds to y."
+  explain = "x: {x} + {r} = {x + r}. y: {y} + {u} = {y + u}. The point is now at {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { x = "randint(0, 10)", y1 = "randint(0, 10)", y2 = "randint(0, 10)" }
+  where   = "y1 < y2"
+  text    = "On a map, the school is at ({x}, {y1}) and the park is at ({x}, {y2}). How many units apart are they?"
+  answer  = "y2 - y1"
+  hint    = "The x-coordinates match, so only y changes: {y2} − {y1}."
+  explain = "{y2} − {y1} = {answer} units."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { x1 = "randint(0, 5)", y1 = "randint(0, 5)", x2 = "randint(6, 10)", y2 = "randint(6, 10)" }
+  text    = "A rectangle has corners at ({x1}, {y1}), ({x2}, {y1}), ({x2}, {y2}) and ({x1}, {y2}). What is its perimeter in units?"
+  answer  = "2 * (x2 - x1) + 2 * (y2 - y1)"
+  hint    = "Length: {x2} − {x1} = {x2 - x1}. Width: {y2} − {y1} = {y2 - y1}."
+  explain = "{x2 - x1} + {y2 - y1} + {x2 - x1} + {y2 - y1} = {answer} units."
+
+[[topic]]
+id       = "g5_expressions"
+label    = "Expressions and patterns"
+standard = "5.OA.A.1-2, 5.OA.B.3"
+tip      = "Do what is inside the parentheses first. Then multiply and divide, then add and subtract, from left to right."
+
+  [[topic.question]]
+  levels  = [1, 2]
+  vars    = { a = "randint(2, 9 + L)", b = "randint(2, 9)", c = "randint(2, 9)" }
+  text    = "({a} + {b}) × {c} = ?"
+  answer  = "(a + b) * c"
+  hint    = "Parentheses first: {a} + {b} = {a + b}."
+  explain = "{a} + {b} = {a + b}, and {a + b} × {c} = {answer}."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { a = "randint(2, 20)", b = "randint(2, 9)", c = "randint(2, 9)" }
+  text    = "{a} + {b} × {c} = ?"
+  answer  = "a + b * c"
+  hint    = "Multiply before you add: {b} × {c} = {b * c}."
+  explain = "{b} × {c} = {b * c}, and {a} + {b * c} = {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(2, 9)", b = "randint(5, 20)", c = "randint(1, 9)" }
+  where   = "b > c"
+  text    = "{a} × ({b} − {c}) = ?"
+  answer  = "a * (b - c)"
+  hint    = "Parentheses first: {b} − {c} = {b - c}."
+  explain = "{b} − {c} = {b - c}, and {a} × {b - c} = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  vars    = { d = "randint(2, 9)", q = "randint(3, 12)", b = "randint(2, 6)", c = "randint(2, 6)", a = "q * d - b * c" }
+  where   = "a >= 1"
+  text    = "[{a} + ({b} × {c})] ÷ {d} = ?"
+  answer  = "q"
+  hint    = "Inside out: {b} × {c} = {b * c}, then {a} + {b * c} = {a + b * c}."
+  explain = "{b} × {c} = {b * c}. {a} + {b * c} = {a + b * c}. {a + b * c} ÷ {d} = {answer}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(2, 9)", b = "randint(2, 9)", c = "randint(2, 9)" }
+  where   = "different(a, b, c)"
+  text    = "Which expression means: add {a} and {b}, then multiply by {c}?"
+  answer  = "'(' + str(a) + ' + ' + str(b) + ') × ' + str(c)"
+  choices = ["'(' + str(a) + ' + ' + str(b) + ') × ' + str(c)", "str(a) + ' + ' + str(b) + ' × ' + str(c)", "str(c) + ' + ' + str(a) + ' × ' + str(b)"]
+  hint    = "The part done first goes in parentheses."
+  explain = "The adding comes first, so it goes in parentheses: {answer}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "randint(2, 6)", k = "randint(2, 3)", b = "a * k", n = "randint(3, 8)" }
+  text    = "Pattern A starts at 0 and adds {a} each step. Pattern B starts at 0 and adds {b} each step. When pattern A is at {a * n}, what number is pattern B at?"
+  answer  = "b * n"
+  hint    = "How many steps has pattern A taken? {a * n} ÷ {a} = {n}."
+  explain = "After {n} steps, pattern B is at {n} × {b} = {answer}. Pattern B is always {k} times pattern A."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { a = "randint(1, 5)", r = "choice([2, 3])" }
+  text    = "What comes next? {a}, {a * r}, {a * r * r}, {a * r ** 3}, ?"
+  answer  = "a * r ** 4"
+  hint    = "How do you get from one number to the next?"
+  explain = "Each number is {r} times the one before: {a * r ** 3} × {r} = {answer}."
