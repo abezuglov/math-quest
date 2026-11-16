@@ -155,7 +155,17 @@ Rules of thumb:
 - No negative numbers before 6th grade: `where = "a > b"` before `a - b`.
 - Money and decimal answers: at most 2 decimal places (3 in 5th grade).
 - K and 1st grade: at most about 10 words in a question, numbers before words,
-  and a picture whenever possible.
+  and a picture whenever possible. These grades never type a fraction or a
+  decimal: the file is refused if it has a `fraction` or `decimal` question
+  (ask "What part is it?" as a `choice` question instead).
+- In K–2 a 🔊 button reads the question aloud. Write `?` for the missing
+  number (`7 + ? = 10`): the voice says "blank". Choice answers that the
+  question text does not already name are read out at the end.
+- In K and 1st grade, choice buttons get a small picture when they can:
+  animal and object names get an emoji, numbers up to 10 get counting dots
+  and shape names get the shape (only when the question has no picture of
+  its own). The grades and the number of encounters per region are set in
+  `config.py`.
 
 ## Worked examples
 

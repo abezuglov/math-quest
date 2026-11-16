@@ -324,13 +324,29 @@ REGION_BY_KEY = {r["key"]: r for r in REGIONS}
 ENCOUNTER_FIELDS = ("name", "emoji", "intro", "win")
 
 
-def build_region(spec: dict) -> dict:
+def shorten(encounters: list, limit: int | None) -> list:
+    """Keep at most `limit` encounters, in story order. The boss and the
+    hands-on task always stay; then the first friend, the first monster, and
+    the rest from the start of the story."""
+    if not limit or len(encounters) <= limit:
+        return encounters
+    must = [i for i, e in enumerate(encounters) if e["kind"] in ("boss", "task")]
+    rest = [i for i in range(len(encounters)) if i not in must]
+    firsts = []
+    for kind in ("riddle", "fight"):
+        firsts += [i for i in rest if encounters[i]["kind"] == kind][:1]
+    order = must + firsts + [i for i in rest if i not in firsts]
+    keep = sorted(order[:max(limit, len(must))])
+    return [encounters[i] for i in keep]
+
+
+def build_region(spec: dict, limit: int | None = None) -> dict:
     """Merge a grade file's [[region]] with the shared story for its map spot.
 
     The grade file gives the name, gem, topics and task, and may override the
     intro/outro/memory text and single encounters (by slot). Encounter
     characters and lines come from REGIONS above. A region without a task has
-    no task encounter.
+    no task encounter. `limit` shortens the story (see shorten).
     """
     base = REGION_BY_KEY[spec["key"]]
     region = dict(base)
@@ -347,5 +363,5 @@ def build_region(spec: dict) -> dict:
                 continue
             e["task"] = spec["task"]
         kept.append(e)
-    region["encounters"] = kept
+    region["encounters"] = shorten(kept, limit)
     return region

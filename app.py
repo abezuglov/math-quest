@@ -1,9 +1,10 @@
-"""The Number Thief of Arithmos - a math text quest for 4th graders.
+"""The Number Thief of Arithmos - a math text quest for grades K-5.
 
 Run locally:  streamlit run app.py
 """
 import datetime
 import html
+import json
 
 import streamlit as st
 
@@ -42,6 +43,14 @@ CSS = """
        border:4px double rgba(200,160,40,.9); background:rgba(230,190,60,.10);}
 .cert h2 {margin:.2rem 0;}
 .cert .big {font-size:2rem; font-weight:800;}
+.cert .std {font-size:.85rem; opacity:.8; margin-top:6px;}
+.question.big {font-size:2.1rem; line-height:1.35;}
+.st-key-big_choices button {min-height:3.6rem;}
+.st-key-big_choices button p {font-size:1.6rem !important; font-weight:700;}
+.st-key-big_answer input {font-size:1.7rem !important;}
+.mq-say {font-size:1.05rem; padding:6px 14px; border-radius:10px; cursor:pointer;
+         border:2px solid rgba(128,128,128,.45); background:rgba(120,100,220,.13);
+         color:inherit;}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -68,6 +77,53 @@ def focus(selector):
 
 def esc(text):
     return html.escape(str(text))
+
+
+def read_aloud(text, key, auto):
+    """A 🔊 button that reads `text` with the browser's own voice
+    (speechSynthesis). With auto=True it also reads it once by itself when the
+    question first appears (`key` tells a new question from a rerun)."""
+    st.session_state["_say_n"] = st.session_state.get("_say_n", 0) + 1
+    bid = f"mq-say-{st.session_state['_say_n']}"
+    data = json.dumps({"text": text, "key": key, "auto": bool(auto), "id": bid})
+    st.html(
+        f"""<button type="button" class="mq-say" id="{bid}">🔊 Read it to me</button>
+        <script>
+        (function() {{
+          const d = {data.replace("</", "<\\/")};
+          function say() {{
+            try {{
+              const s = window.speechSynthesis;
+              s.cancel();
+              const u = new SpeechSynthesisUtterance(d.text);
+              u.lang = 'en-US';
+              u.rate = 0.85;
+              s.speak(u);
+            }} catch (e) {{}}
+          }}
+          setTimeout(function() {{
+            const all = document.querySelectorAll('.mq-say');
+            const b = document.getElementById(d.id) || all[all.length - 1];
+            if (!('speechSynthesis' in window)) {{ if (b) b.style.display = 'none'; return; }}
+            if (b) b.addEventListener('click', say);
+            if (d.auto && window.__mqSpoken !== d.key) {{
+              window.__mqSpoken = d.key;
+              say();
+            }}
+          }}, 250);
+        }})();
+        </script>""",
+        unsafe_allow_javascript=True,
+    )
+
+
+def young(g):
+    """Kindergarten and 1st grade: big text and picture buttons."""
+    return g.grade in getattr(config, "BIG_TEXT_GRADES", [])
+
+
+def auto_read_default(grade):
+    return grade in getattr(config, "AUTO_READ_GRADES", [])
 
 
 def note(inner_html):
@@ -182,6 +238,8 @@ def title_screen():
             elif game:
                 new_game(game)
                 st.rerun()
+    typing = ("" if grade in curriculum.NO_TYPED_FRACTIONS
+              else "- Type fractions like `3/4` and decimals like `0.75`.\n")
     with st.expander("How to play"):
         st.markdown(
             "- **The map:** pick any place to visit. Dragon's Peak opens when you "
@@ -197,7 +255,7 @@ def title_screen():
             "- Coming back to a place whose gem you already have is practice: it "
             "pays half XP.\n"
             "- Get three in a row and the riddles get harder and are worth **more XP**.\n"
-            "- Type fractions like `3/4` and decimals like `0.75`.\n"
+            + typing +
             "- Write down your **hero code** to carry on another day. Reloading "
             "the page takes you back to the map.")
 
@@ -220,6 +278,9 @@ def sidebar(g):
             st.markdown(f"{g.label(t)}  \n{'⭐' * g.tiers[t]}{'☆' * (5 - g.tiers[t])}")
         if g.streak >= 3:
             st.markdown(f"🔥 Streak: **{g.streak}** in a row!")
+        if g.grade in getattr(config, "READ_ALOUD_GRADES", []):
+            st.toggle("🔊 Read each question to me", value=auto_read_default(g.grade),
+                      key=f"auto_read_{g.grade}")
         st.markdown("### 🔑 Hero code")
         st.markdown(f"<span class='code'>{g.to_code()}</span>", unsafe_allow_html=True)
         st.caption("Write it down to carry on another day.")
@@ -371,18 +432,32 @@ def question_screen(g):
         if fb.sage_tip:
             note(f"🦉 <b>{story.SAGE_NAME} whispers:</b> {esc(fb.sage_tip)}")
 
-    st.markdown(f"<div class='question'>{esc(q.text)}</div>", unsafe_allow_html=True)
+    big = young(g)
+    st.markdown(f"<div class='question{' big' if big else ''}'>{esc(q.text)}</div>",
+                unsafe_allow_html=True)
+    if g.grade in getattr(config, "READ_ALOUD_GRADES", []):
+        words = curriculum.spoken(q.text, q.choices if q.kind == "choice" else None)
+        if enc["attempt"] == 1 and fb is not None:
+            words = f"Not quite. Hint: {curriculum.spoken(q.hint)} Try again. {words}"
+        auto = st.session_state.get(f"auto_read_{g.grade}", auto_read_default(g.grade))
+        read_aloud(words, f"{g.qcount}_{enc['attempt']}", auto)
     picture(pictures.for_question(q.picture))
 
     if q.kind == "choice":
-        cols = st.columns(len(q.choices))
-        for col, choice in zip(cols, q.choices):
-            col.button(choice, key=f"c_{g.qcount}_{enc['attempt']}_{choice}",
-                       width="stretch", on_click=g.submit, args=(choice,))
+        with st.container(key="big_choices" if big else None):
+            cols = st.columns(len(q.choices))
+            for col, choice in zip(cols, q.choices):
+                art = pictures.for_choice(choice, q.picture) if big else None
+                if art:
+                    col.image(art, width="stretch")
+                col.button(pictures.choice_label(choice) if big else choice,
+                           key=f"c_{g.qcount}_{enc['attempt']}_{choice}",
+                           width="stretch", on_click=g.submit, args=(choice,))
     else:
         label = {"fraction": "Your answer (type a fraction like 3/4)",
                  "decimal": "Your answer (type a decimal like 0.75)"}.get(q.kind, "Your answer")
-        with st.form(f"f_{g.qcount}_{enc['attempt']}", clear_on_submit=True):
+        with st.container(key="big_answer" if big else None), \
+                st.form(f"f_{g.qcount}_{enc['attempt']}", clear_on_submit=True):
             raw = st.text_input(label, key=f"a_{g.qcount}_{enc['attempt']}",
                                 max_chars=20)
             sent = st.form_submit_button("Attack! ⚔️" if foe else "Answer ✅",
@@ -588,22 +663,28 @@ def victory_screen(g):
     rows = ""
     for row in g.summary():
         acc = f"{row['accuracy']}%" if row["accuracy"] is not None else "–"
-        rows += (f"<tr><td style='text-align:left'>{g.label(row['topic'])}</td>"
+        rows += (f"<tr><td style='text-align:left'>{esc(g.label(row['topic']))}</td>"
+                 f"<td><small>{esc(row['standard'])}</small></td>"
                  f"<td>{row['right']} / {row['asked']}</td><td>{acc}</td>"
                  f"<td>{'⭐' * row['tier']}</td></tr>")
     right = sum(s[0] for s in g.stats.values())
     asked = sum(s[1] for s in g.stats.values())
+    codes = g.practiced_standards()
+    standards = (f"<div class='std'>Common Core standards practiced today: "
+                 f"{esc(', '.join(codes))}</div>" if codes else "")
     st.markdown(
         f"""<div class="cert">
         <div>📜 Kingdom of Arithmos · Certificate of Heroism</div>
         <h2>{esc(g.name)}</h2>
+        <div>🎓 {esc(grade_name(g.grade))}</div>
         <div>returned the stolen numbers and earned the rank of</div>
         <div class="big">🎖️ {esc(g.rank)}</div>
         <div>✨ {g.xp} XP · 💎 {len(g.done)} gems · today: {right} of {asked} first
              tries right · best streak {g.best_streak} · {datetime.date.today():%B %d, %Y}</div>
+        {standards}
         <table style="margin:14px auto 0; border-collapse:collapse;">
-        <tr><th style='text-align:left'>Skill</th><th>Right today</th><th>Accuracy</th>
-            <th>Highest level</th></tr>
+        <tr><th style='text-align:left'>Skill</th><th>Standard</th><th>Right today</th>
+            <th>Accuracy</th><th>Highest level</th></tr>
         {rows}
         </table></div>""",
         unsafe_allow_html=True,

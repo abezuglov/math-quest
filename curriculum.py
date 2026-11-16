@@ -40,6 +40,7 @@ GRADE_ORDER = ["K", "1", "2", "3", "4", "5"]
 GRADE_NAMES = {"K": "Kindergarten", "1": "1st grade", "2": "2nd grade",
                "3": "3rd grade", "4": "4th grade", "5": "5th grade"}
 KINDS = ("number", "fraction", "decimal", "choice")
+NO_TYPED_FRACTIONS = ("K", "1")   # these grades never type a fraction or decimal
 LEVELS = (1, 2, 3, 4, 5)
 REGION_KEYS = ("village", "mines", "docks", "forest", "castle", "peak")
 MAX_NUMBER = 10 ** 15    # no expression may make a number bigger than this
@@ -560,6 +561,11 @@ def load_grade(path: Path) -> Grade:
                      for i, q in enumerate(raw.get("question", []))]
         topic = Topic(tid, label, code, tip, raw.get("standard", ""), templates,
                       raw.get("enabled", True))
+        typed = [t for t in templates if t.kind in ("fraction", "decimal")]
+        if code in NO_TYPED_FRACTIONS and typed:
+            raise CurriculumError(f"{typed[0].where_from}: {GRADE_NAMES[code]} children "
+                                  f"do not type fractions or decimals; use a choice "
+                                  f"question instead")
         missing = [lv for lv in LEVELS if not topic.for_level(lv)]
         if missing:
             raise CurriculumError(f"{path.name}: topic {tid} has no question for level(s) {missing}")
@@ -670,6 +676,28 @@ def show_answer(q: Question, value=None) -> str:
         except ValueError:
             return fmt(value)
     return fmt(value)
+
+
+_SPOKEN_SIGNS = [("−", " minus "), ("+", " plus "), ("×", " times "), ("÷", " divided by "),
+                 ("=", " equals "), ("<", " is less than "), (">", " is greater than "),
+                 ("¢", " cents")]
+_SIGN_CHOICES = {"<": "less than", ">": "greater than", "=": "equal"}
+
+
+def spoken(text: str, choices=None) -> str:
+    """Question text the way a reading voice should say it: signs as words,
+    '7 + ? = 10' as 'seven plus what number equals ten', '3:00' as 'three
+    o'clock'. Choices that the text does not already name are read at the end."""
+    out = re.sub(r"\b(\d{1,2}):00\b", r"\1 o'clock", str(text))
+    out = re.sub(r"\b(\d{1,2}):0(\d)\b", r"\1 oh \2", out)
+    out = re.sub(r"\b(\d{1,2}):(\d\d)\b", r"\1 \2", out)
+    out = re.sub(r"(?<![\w)\]])\s*\?", " blank", out)     # a ? that stands for a missing part
+    for sign, words in _SPOKEN_SIGNS:
+        out = out.replace(sign, words)
+    if choices and any(str(c) not in str(text) for c in choices):
+        said = [_SIGN_CHOICES.get(str(c)) or spoken(c) for c in choices]
+        out += " Is it " + ", ".join(said[:-1]) + ", or " + said[-1] + "?"
+    return re.sub(r"\s+", " ", out).strip()
 
 
 # --------------------------------------------------------------------------

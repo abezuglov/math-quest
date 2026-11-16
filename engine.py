@@ -220,7 +220,9 @@ class Game:
         self.streak = 0
         self.best_streak = 0
         self.defeats = 0
-        self.regions = [story.build_region(r) for r in self.content.regions
+        limit = getattr(config, "ENCOUNTERS_BY_GRADE", {}).get(self.grade)
+        limit = max(1, int(limit)) if limit else None
+        self.regions = [story.build_region(r, limit) for r in self.content.regions
                         if r.get("mix") or any(t in self.topics for t in r["topics"])]
         self.rank_scale = max(0.2, _encounter_weight(self.regions) / _FULL_WEIGHT)
         self.region_idx = 0
@@ -737,9 +739,19 @@ class Game:
             right, asked = self.stats[t]
             rows.append({
                 "topic": t,
+                "standard": self.standard(t),
                 "right": right,
                 "asked": asked,
                 "accuracy": round(100 * right / asked) if asked else None,
                 "tier": self.best_tiers[t],
             })
         return rows
+
+    def practiced_standards(self):
+        """Common Core codes of the topics answered at least once, in file order."""
+        codes = []
+        for t in self.topics:
+            code = self.standard(t)
+            if self.stats[t][1] and code and code not in codes:
+                codes.append(code)
+        return codes

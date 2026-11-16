@@ -72,7 +72,7 @@ def test_full_playthrough_through_the_ui():
             miss = turn % 4 == 0 or g.enc["kind"] == "trial"    # every 4th one wrong
             if q.kind == "choice":
                 want = next(c for c in q.choices if (c != q.answer) == miss)
-                click(at, lambda b: b.label == want)
+                click(at, lambda b: b.key == f"c_{g.qcount}_{g.enc['attempt']}_{want}")
             else:
                 at.text_input[0].set_value("1" if miss else fmt(q.answer))
                 click(at, lambda b: "⚔️" in b.label or "✅" in b.label)

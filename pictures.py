@@ -745,3 +745,45 @@ def for_question(picture):
     kind, *args = picture
     maker = _PICTURES.get(kind)
     return maker(*args) if maker else None
+
+
+# --------------------------------------------------------------------------
+# Pictures on the answer buttons (Kindergarten and 1st grade)
+# --------------------------------------------------------------------------
+CHOICE_EMOJI = {
+    "cat": "🐱", "cats": "🐱", "dog": "🐶", "dogs": "🐶", "duck": "🦆", "ducks": "🦆",
+    "hen": "🐔", "hens": "🐔", "frog": "🐸", "frogs": "🐸", "fish": "🐟", "cow": "🐮",
+    "cows": "🐮", "goat": "🐐", "goats": "🐐", "bird": "🐦", "birds": "🐦",
+    "bus": "🚌", "bike": "🚲", "train": "🚂", "car": "🚗", "snake": "🐍", "worm": "🪱",
+    "river": "🏞️", "puddle": "💧", "ladder": "🪜", "spoon": "🥄", "giraffe": "🦒",
+    "rope": "🪢", "pencil": "✏️", "slide": "🛝", "shoe": "👟", "elephant": "🐘",
+    "mouse": "🐭", "ball": "⚽", "rock": "🪨", "feather": "🪶", "bed": "🛏️",
+    "pillow": "🛌", "tree": "🌳", "leaf": "🍃", "horse": "🐴", "bug": "🐛",
+    "flower": "🌸", "tower": "🗼", "house": "🏠", "crayon": "🖍️", "straw": "🥤",
+    "ribbon": "🎀", "stick": "🪵", "true": "✅", "false": "❌", "yes": "👍", "no": "👎",
+    "flat": "📄", "solid": "🧊",
+}
+
+
+def choice_label(text) -> str:
+    """'a bus' -> '🚌 a bus'. Words without a picture stay as they are."""
+    word = str(text).lower()
+    for article in ("a ", "an ", "the "):
+        if word.startswith(article):
+            word = word[len(article):]
+    emoji = CHOICE_EMOJI.get(word)
+    return f"{emoji} {text}" if emoji else str(text)
+
+
+def for_choice(text, question_picture=None):
+    """A small picture for an answer button, or None. Numbers up to 10 get
+    counting dots and shape names their shape, but only when the question has
+    no picture of its own (or the buttons would just match the question's)."""
+    if question_picture:
+        return None
+    word = str(text).strip().lower()
+    if word.isdigit() and 1 <= int(word) <= 10:
+        return dots(int(word))
+    if word in _SHAPES:
+        return shape(word)
+    return None

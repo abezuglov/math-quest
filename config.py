@@ -9,6 +9,15 @@ Change the values here, save, and restart the app.
 GRADES = ["K", "1", "2", "3", "4", "5"]   # grades offered on the title screen
 DEFAULT_GRADE = None   # e.g. "3" to skip the grade buttons; None = ask (or ?grade= in the link)
 
+# --- The youngest players ---------------------------------------------------
+READ_ALOUD_GRADES = ["K", "1", "2"]   # a 🔊 "Read it to me" button on every question
+AUTO_READ_GRADES = ["K", "1"]         # read each new question aloud by itself (the
+                                      # child can switch this off in the sidebar)
+BIG_TEXT_GRADES = ["K", "1"]          # bigger question text and answer buttons
+# Encounters per region (friends, monsters, task and boss). Grades not listed
+# get the full story (7 per region). The boss and the hands-on task are always kept.
+ENCOUNTERS_BY_GRADE = {"K": 4, "1": 5}
+
 # --- Difficulty tiers (1 = easiest, 5 = hardest) ----------------------------
 # Every topic has its own tier per child. Clamp the range for the whole class here.
 MIN_TIER = 1
