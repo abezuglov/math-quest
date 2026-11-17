@@ -191,6 +191,18 @@ def record(visit, grade, events):
         log.warning("usage stats: %s", e)
 
 
+def split_sittings(df, gap_minutes=30):
+    """A visit id lives in the page address, so a bookmark opened days later
+    carries the old one. Split a visit wherever it went quiet for longer
+    than `gap_minutes`: each part is one sitting (a, a~2, a~3 ...)."""
+    import pandas as pd
+    df = df.sort_values(["visit", "ts"])
+    gap = df.groupby("visit")["ts"].diff() > pd.Timedelta(minutes=gap_minutes)
+    part = gap.astype(int).groupby(df["visit"]).cumsum()
+    df["visit"] = df["visit"].where(part == 0, df["visit"] + "~" + (part + 1).astype(str))
+    return df.sort_index()
+
+
 def load(url=None):
     """All events as a pandas DataFrame (for stats.py)."""
     import pandas as pd

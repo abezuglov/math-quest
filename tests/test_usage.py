@@ -87,3 +87,32 @@ def test_postgres_addresses_use_psycopg3():
     assert usage.normalize("postgresql://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
     assert usage.normalize("sqlite:///usage.db").endswith("/usage.db")
     assert usage.normalize("sqlite:///usage.db") != "sqlite:///usage.db"
+
+
+def test_peeking_at_a_region_intro_is_not_walking_out():
+    g = Game("x", "4", seed=4)
+    g.choose_region(0)
+    g.leave_region()                  # back from the intro: never went in
+    assert [e["event"] for e in g.events] == []
+
+
+def test_a_visit_resumed_much_later_is_a_new_sitting():
+    pd = pytest.importorskip("pandas")
+    t = pd.Timestamp("2026-11-01 10:00", tz="UTC")
+    df = pd.DataFrame({"visit": ["a", "a", "a", "b"],
+                       "ts": [t, t + pd.Timedelta(minutes=20),
+                              t + pd.Timedelta(days=3), t]})
+    out = usage.split_sittings(df)
+    assert out["visit"].tolist()[:2] == ["a", "a"]
+    assert out["visit"].nunique() == 3
+
+
+def test_a_non_ascii_dashboard_password_does_not_crash():
+    pytest.importorskip("pandas")
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file("../stats.py", default_timeout=30)
+    at.secrets["stats_password"] = "Grüße"
+    at.run()
+    at.text_input[0].input("née").run()
+    assert not at.exception
+    assert any("Wrong password" in e.value for e in at.error)

@@ -458,9 +458,11 @@ class Game:
         """Back to the map from inside a region. XP is kept, the quest is not."""
         if self.phase not in ("region_intro", "question", "task", "feedback", "defeat"):
             return
-        self._log("region_left", stage=self.phase, encounter=self.enc_idx,
-                  topic=self.question.topic if self.phase == "question" else None,
-                  seconds=self._since(self._region_at))
+        if self.phase != "region_intro":     # from the intro: never went in
+            self._log("region_left", stage=self.phase, encounter=self.enc_idx,
+                      topic=self.question.topic if self.phase == "question" else None,
+                      seconds=self._since(self._region_at))
+        self._region_at = None
         self.enc = self.question = self.task = self.feedback = None
         self.input_error = ""
         self.hp = config.MAX_HP

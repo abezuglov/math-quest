@@ -29,7 +29,7 @@ def password_ok():
     if not secret:
         return True
     typed = st.text_input("Password", type="password")
-    if typed and hmac.compare_digest(typed, str(secret)):
+    if typed and hmac.compare_digest(typed.encode(), str(secret).encode()):
         return True
     if typed:
         st.error("Wrong password.")
@@ -38,7 +38,7 @@ def password_ok():
 
 @st.cache_data(ttl=60, show_spinner="Loading the events...")
 def load(url):
-    df = usage.load(url)
+    df = usage.split_sittings(usage.load(url))
     extra = pd.json_normalize([json.loads(d) if d else {} for d in df["data"]])
     extra.index = df.index
     return df.drop(columns=["data"]).join(extra.drop(columns=[c for c in extra
@@ -154,12 +154,13 @@ def main():
     ev = df[df["region"].notna()]
 
     def per_region(e):
-        n = lambda name: e[e["event"] == name]["visit"].nunique()   # noqa: E731
         won_q = e[e["event"] == "region_won"]
         trials = e[e["event"] == "trial_done"]
         passed = trials[col(trials, "passed", False).fillna(False).astype(bool)]
         tried = e[e["event"] == "region_start"]["visit"].nunique()
-        won = pd.concat([won_q["visit"], passed["visit"]]).nunique()
+        winners = set(won_q["visit"]) | set(passed["visit"])
+        won = len(winners)
+        left = set(e[e["event"] == "region_left"]["visit"]) - winners
         return pd.Series({
             "Visits that entered": tried,
             "Won the gem": won,
@@ -167,7 +168,7 @@ def main():
             "Won by quest": won_q["visit"].nunique(),
             "Won by speed trial": passed["visit"].nunique(),
             "Trials failed": len(trials) - len(passed),
-            "Left without winning": n("region_left"),
+            "Left without winning": len(left),
             "Defeats": (e["event"] == "defeat").sum(),
             "Median minutes to win (quest)": minutes(won_q["seconds"].median()),
         })
