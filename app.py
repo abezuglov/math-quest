@@ -5,6 +5,8 @@ Run locally:  streamlit run app.py
 import datetime
 import html
 import json
+import re
+import uuid
 
 import streamlit as st
 
@@ -12,6 +14,7 @@ import config
 import curriculum
 import pictures
 import story
+import usage
 from engine import TRIAL_PASS, TRIAL_QUESTIONS, Game
 
 st.set_page_config(page_title=story.TITLE, page_icon="🐉", layout="centered")
@@ -135,9 +138,35 @@ def picture(svg, wide=False):
         st.image(svg, width="stretch" if wide else "content")
 
 
-def new_game(game):
+def visit_id():
+    """A random id for this hero's visit (no name, no code): one per hero in one
+    browser tab. It is kept in the page address so a refresh is the same visit."""
+    if "visit" not in st.session_state:
+        st.session_state.visit = uuid.uuid4().hex
+    return st.session_state.visit
+
+
+def track(g, event=None, **data):
+    """Send the game's new usage events (and optionally one more) to usage.py."""
+    events = list(getattr(g, "events", []))
+    if events:
+        g.events.clear()
+    if event:
+        events.append(dict(data, event=event, gems=len(g.done), xp=g.xp))
+    usage.record(visit_id(), g.grade, events)
+
+
+def new_game(game, how):
+    """how: 'new', 'code' (typed a hero code), 'refresh' or 'grade' (changed grade)."""
+    v = str(st.query_params.get("v") or "")
+    if how == "refresh" and re.fullmatch(r"[0-9a-f]{32}", v):
+        st.session_state.visit = v              # same tab, same visit
+    else:
+        st.session_state.visit = uuid.uuid4().hex   # a new hero is a new visit
     st.session_state.game = game
     st.session_state.pop("celebrated", None)
+    entry = "link" if st.session_state.get("link_grade") else "title"
+    track(game, "start", how=how, entry=entry, regions=len(game.regions))
 
 
 def end_game():
@@ -147,6 +176,7 @@ def end_game():
     st.session_state.pop("celebrated", None)
     st.session_state.pop("game", None)
     st.session_state.pop("grade_pick", None)
+    st.session_state.pop("visit", None)
     grade = st.session_state.get("link_grade")
     st.query_params.clear()
     if grade:
@@ -169,14 +199,18 @@ def sync_url(g):
     """Keep the hero code in the page address, so a refresh does not lose the hero."""
     code = g.to_code()
     link = "1" if st.session_state.get("link_grade") else None
+    visit = visit_id() if usage.db_url() else None
     if (st.query_params.get("hero") != code or st.query_params.get("name") != g.name
             or st.query_params.get("grade") != g.grade
-            or st.query_params.get("link") != link):
+            or st.query_params.get("link") != link
+            or st.query_params.get("v") != visit):
         st.query_params["hero"] = code
         st.query_params["name"] = g.name
         st.query_params["grade"] = g.grade
         if link:
             st.query_params["link"] = link
+        if visit:
+            st.query_params["v"] = visit
 
 
 def grades_offered():
@@ -219,7 +253,7 @@ def title_screen():
             go = st.form_submit_button("Begin the quest ⚔️", type="primary")
         game = start_game(lambda: Game(name.strip() or "Hero", grade)) if go else None
         if game:
-            new_game(game)
+            new_game(game, "new")
             st.rerun()
         if not fixed and st.button("Pick another grade", key="grade_again"):
             st.session_state.pop("grade_pick", None)
@@ -236,7 +270,7 @@ def title_screen():
                 st.warning("That code does not look right. Check each letter and "
                            "number and try again.")
             elif game:
-                new_game(game)
+                new_game(game, "code")
                 st.rerun()
     typing = ("" if grade in curriculum.NO_TYPED_FRACTIONS
               else "- Type fractions like `3/4` and decimals like `0.75`.\n")
@@ -298,7 +332,7 @@ def sidebar(g):
                 st.session_state.pop("side_grade_sure", None)
                 game = start_game(lambda: Game(name, pick))
                 if game:
-                    new_game(game)
+                    new_game(game, "grade")
                     st.rerun()
         with st.expander("Teacher"):
             st.caption("Starts a brand new game for a new player. "
@@ -728,11 +762,12 @@ def main():
         if game is None:
             st.query_params.clear()
         elif game:
-            new_game(game)
+            new_game(game, "refresh")
     if "game" not in st.session_state:
         title_screen()
         return
     g = st.session_state.game
+    track(g)          # what happened on the last click
     sync_url(g)
     sidebar(g)
     hud(g)

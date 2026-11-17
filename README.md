@@ -80,6 +80,46 @@ on it cover the current sitting only. The code is not secret-proof: a determined
 child could guess a code that unlocks more, so treat the certificate as
 encouragement, not as a grade.
 
+## Usage stats (for the teacher)
+
+The game keeps anonymous stats: how many play, in which grade, how far they
+get, where they get stuck, and how long things take. See them with:
+
+```
+streamlit run stats.py
+```
+
+The dashboard shows visits per day and per grade, and for every region how many
+went in, won the gem (by quest or speed trial), walked out, or ran out of
+health. For every skill it shows first-try accuracy, median seconds per answer,
+levels up and down, and accuracy at each level. It also lists where unfinished
+visits stopped and the actual wrong answers per skill, and has a CSV download
+of all events.
+
+**What is stored:** a random visit id (one per hero per browser tab; a refresh
+keeps it), the grade, and events: entering, winning or leaving a region,
+defeats, speed-trial results, and each answer (the question, the answer given,
+right or wrong, the level, seconds taken). **Not stored:** the hero's name, the
+hero code, the IP address or anything else about the child.
+
+**Where it goes:** by default to `usage.db` (SQLite) next to `app.py`. That
+is fine on your own computer, but **Streamlit Cloud wipes local files when the
+app restarts**, so for the online game use a free hosted Postgres database
+(for example Neon or Supabase):
+
+1. Create the database and copy its connection address
+   (`postgresql://user:password@host:5432/dbname`).
+2. In Streamlit Cloud, open the app's **Settings → Secrets** and add
+   `usage_db = "postgresql://..."`. The game creates its table by itself.
+3. To read those stats, put the same line in `.streamlit/secrets.toml` on your
+   computer (this file is not committed) and run `streamlit run stats.py`.
+   Or deploy `stats.py` as a second Streamlit Cloud app with the same
+   `usage_db` secret plus `stats_password = "..."` so only you can open it.
+
+To collect nothing, set `USAGE_TRACKING = False` in `config.py`. A slow or
+broken database never slows down or stops the game: the events are written in
+the background, and failures only print a warning in the log.
+
 ## How the game works
 
 Each grade's map has six regions. The last one, Dragon's Peak, has its own
@@ -194,4 +234,6 @@ reordering or deleting anything.
 - `pictures.py` - the drawings (map, scenes, math figures)
 - `story.py` - regions, characters, dialogue and story pages
 - `config.py` - teacher settings
+- `usage.py` - anonymous usage stats (writes events to a database)
+- `stats.py` - the usage dashboard (`streamlit run stats.py`)
 - `tests/` - run with `pytest tests`

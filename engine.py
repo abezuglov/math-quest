@@ -5,6 +5,7 @@ Pure Python (no Streamlit) so it can be tested on its own.
 from __future__ import annotations
 
 import random
+import time
 from dataclasses import dataclass
 
 import config
@@ -252,8 +253,38 @@ class Game:
         n = sum(1 for r in self.regions if not r.get("final"))
         # Story pages appear after the 1st and 3rd gem and when the Peak opens.
         self._beat_at = [min(1, n), min(3, n), n][:len(story.BEATS)] if n else []
+        # Usage events for the stats (see usage.py). The app takes them out
+        # after every click; nothing here names the child.
+        self.events = []
+        self._clock = time.monotonic
+        self._asked_at = None      # when the current question/task appeared
+        self._region_at = None     # when the current quest or trial began
 
     # ------------------------------------------------------------------
+    def _log(self, event, **data):
+        """Note a usage event (every one happens in a region: it says which)."""
+        data.setdefault("region", self.region["key"])
+        data.setdefault("mode", self.mode)
+        data["event"] = event
+        data["gems"] = len(self.done)
+        data["xp"] = self.xp
+        self.events.append(data)
+        del self.events[:-500]     # never grows without end if nobody collects them
+
+    def _since(self, t0):
+        return round(self._clock() - t0, 1) if t0 is not None else None
+
+    def _log_answer(self, item, correct, fb, given):
+        enc = self.enc
+        text = getattr(item, "text", None) or getattr(item, "prompt", "")  # task: prompt
+        self._log("answer", kind=enc["kind"], topic=item.topic, tier=item.tier,
+                  correct=correct, attempt=enc["attempt"] + 1,
+                  seconds=self._since(self._asked_at), potion=bool(enc["potion"]),
+                  task=fb.is_task, change=fb.tier_change, sage=bool(fb.sage_tip),
+                  damage=fb.damage, question=str(text)[:300],
+                  given=str(given)[:80], expected=str(fb.answer_text)[:80])
+        self._asked_at = self._clock()   # a retry is timed from here
+
     def label(self, topic: str) -> str:
         return self.content.topics[topic].label
 
@@ -331,6 +362,7 @@ class Game:
             self.feedback = None
             self.input_error = ""
             self.qcount += 1
+            self._asked_at = self._clock()
             self.phase = "task"
             return
         hits = 0
@@ -372,6 +404,7 @@ class Game:
         self.qcount += 1
         self.feedback = None
         self.input_error = ""
+        self._asked_at = self._clock()
         self.phase = "question"
 
     def _record(self, topic, correct):
@@ -425,6 +458,9 @@ class Game:
         """Back to the map from inside a region. XP is kept, the quest is not."""
         if self.phase not in ("region_intro", "question", "task", "feedback", "defeat"):
             return
+        self._log("region_left", stage=self.phase, encounter=self.enc_idx,
+                  topic=self.question.topic if self.phase == "question" else None,
+                  seconds=self._since(self._region_at))
         self.enc = self.question = self.task = self.feedback = None
         self.input_error = ""
         self.hp = config.MAX_HP
@@ -435,6 +471,9 @@ class Game:
             return
         self.region_paid = self._paid.setdefault(self.region["key"], {})
         self.region_defeats = 0
+        self._region_at = self._clock()
+        self._log("region_start", encounters=len(self.region["encounters"]),
+                  replay=self.half)
         self._enter_region()
 
     # --- speed trial ---------------------------------------------------
@@ -445,6 +484,8 @@ class Game:
                     "asked": 0, "right": 0, "total": TRIAL_QUESTIONS,
                     "potion": False, "monster_hp": 0, "monster_max": 0,
                     "prove": self.region["key"] not in self.done}
+        self._region_at = self._clock()
+        self._log("region_start", encounters=TRIAL_QUESTIONS, replay=self.half)
         self._new_question()
 
     def retry_trial(self):
@@ -556,6 +597,7 @@ class Game:
         if new_rank != old_rank:
             fb.rank_up = new_rank
         self.feedback = fb
+        self._log_answer(q, correct, fb, fb.your_answer)
         # A missed riddle goes straight back to the question with a hint.
         self.phase = "question" if fb.retry else "feedback"
         return True
@@ -578,6 +620,7 @@ class Game:
         if self.rank != old_rank:
             fb.rank_up = self.rank
         self.feedback = fb
+        self._log_answer(q, correct, fb, fb.your_answer)
         self.phase = "feedback"
         return True
 
@@ -619,6 +662,7 @@ class Game:
         if self.rank != old_rank:
             fb.rank_up = self.rank
         self.feedback = fb
+        self._log_answer(task, correct, fb, fb.your_answer)
         self.phase = "task" if fb.retry else "feedback"
         return True
 
@@ -649,11 +693,15 @@ class Game:
             self.trial_result = {"right": right, "total": self.enc["total"],
                                  "passed": passed, "new_gem": self.just_won,
                                  "bonus": bonus}
+            self._log("trial_done", right=right, total=self.enc["total"], passed=passed,
+                      new_gem=self.just_won, seconds=self._since(self._region_at))
             self.feedback = None
             self.phase = "trial_done"
             return
         if fb.defeated:
             self.defeats += 1
+            self._log("defeat", encounter=self.enc_idx, kind=self.enc["kind"],
+                      topic=fb.topic, seconds=self._since(self._region_at))
             self.phase = "defeat"
             return
         if not fb.encounter_over:
@@ -666,6 +714,8 @@ class Game:
         if self.enc_idx >= len(encounters):
             self.feedback = None
             self._win_gem()
+            self._log("region_won", new_gem=self.just_won, defeats=self.region_defeats,
+                      seconds=self._since(self._region_at))
             self.phase = "region_done"
             return
         nxt = encounters[self.enc_idx]
@@ -682,6 +732,7 @@ class Game:
             self.tiers[t] = _clamp(self.tiers[t] - 1)
             self.wrong_run[t] = 0
         self.region_defeats += 1
+        self._log("region_retry", defeats=self.region_defeats)
         self._enter_region()
 
     def next_region(self):
@@ -690,6 +741,7 @@ class Game:
         if self.is_last_region:
             self.enc = self.question = self.task = None
             self.phase = "victory"
+            self._log("victory", defeats=self.defeats, best_streak=self.best_streak)
             return
         self._after_region()
 

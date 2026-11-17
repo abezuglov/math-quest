@@ -56,3 +56,13 @@ TASK_XP_FACTOR = 2    # hands-on tasks pay this many times a riddle's XP
 MONSTER_HITS = 2
 BOSS_HITS = 3
 FINAL_BOSS_HITS = 5
+
+# --- Usage stats (see usage.py; view them with: streamlit run stats.py) ------
+# Anonymous: a random visit id, the grade and what happened (answers, times,
+# regions won, defeats). Never the hero's name or code.
+USAGE_TRACKING = True
+# Where to keep them. A secret `usage_db` (Streamlit Cloud: app settings ->
+# Secrets) or the MATHQUEST_USAGE_DB environment variable wins over this.
+# On Streamlit Cloud a local file is wiped when the app restarts, so use a
+# hosted database there, e.g. "postgresql://user:password@host:5432/dbname".
+USAGE_DB = "sqlite:///usage.db"

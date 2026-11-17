@@ -1,3 +1,8 @@
 .venv/
 __pycache__/
 .pytest_cache/
+# roborev snapshots
+/.roborev/
+# usage stats (local) and secrets
+usage.db
+.streamlit/secrets.toml
