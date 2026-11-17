@@ -116,3 +116,18 @@ def test_a_non_ascii_dashboard_password_does_not_crash():
     at.text_input[0].input("née").run()
     assert not at.exception
     assert any("Wrong password" in e.value for e in at.error)
+
+
+def test_dashboard_works_before_anyone_wins_a_region(tmp_path, monkeypatch):
+    pytest.importorskip("pandas")
+    from streamlit.testing.v1 import AppTest
+    monkeypatch.setenv("MATHQUEST_USAGE_DB", f"sqlite:///{tmp_path / 'u.db'}")
+    g = Game("x", "4", seed=5)
+    g.choose_region(0)
+    g.start_region()
+    answer_right(g)
+    usage.record("b" * 32, g.grade, [{"event": "start", "how": "new"}] + g.events)
+    usage.recorder().flush()
+    at = AppTest.from_file("../stats.py", default_timeout=60).run()
+    assert not at.exception
+    assert any(m.label == "Visits" and m.value == "1" for m in at.metric)

@@ -69,7 +69,7 @@ def by_grade(index):
 
 
 def minutes(s):
-    return (s / 60).round(1)
+    return round(float(s) / 60, 1)    # s is one median (a plain float when empty)
 
 
 def main():
