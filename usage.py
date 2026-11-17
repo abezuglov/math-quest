@@ -193,11 +193,13 @@ def record(visit, grade, events):
 
 def split_sittings(df, gap_minutes=30):
     """A visit id lives in the page address, so a bookmark opened days later
-    carries the old one. Split a visit wherever it went quiet for longer
-    than `gap_minutes`: each part is one sitting (a, a~2, a~3 ...)."""
+    carries the old one. Split a visit where the page was opened again (a
+    `start` event) after more than `gap_minutes` of quiet: each part is one
+    sitting (a, a~2, a~3 ...). A tab merely left open (no `start`) stays one."""
     import pandas as pd
     df = df.sort_values(["visit", "ts"])
-    gap = df.groupby("visit")["ts"].diff() > pd.Timedelta(minutes=gap_minutes)
+    gap = ((df.groupby("visit")["ts"].diff() > pd.Timedelta(minutes=gap_minutes))
+           & (df["event"] == "start"))
     part = gap.astype(int).groupby(df["visit"]).cumsum()
     df["visit"] = df["visit"].where(part == 0, df["visit"] + "~" + (part + 1).astype(str))
     return df.sort_index()

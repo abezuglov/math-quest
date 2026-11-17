@@ -100,11 +100,22 @@ def test_a_visit_resumed_much_later_is_a_new_sitting():
     pd = pytest.importorskip("pandas")
     t = pd.Timestamp("2026-11-01 10:00", tz="UTC")
     df = pd.DataFrame({"visit": ["a", "a", "a", "b"],
+                       "event": ["start", "answer", "start", "start"],
                        "ts": [t, t + pd.Timedelta(minutes=20),
                               t + pd.Timedelta(days=3), t]})
     out = usage.split_sittings(df)
     assert out["visit"].tolist()[:2] == ["a", "a"]
     assert out["visit"].nunique() == 3
+
+
+def test_a_tab_left_open_over_recess_stays_one_sitting():
+    pd = pytest.importorskip("pandas")
+    t = pd.Timestamp("2026-11-01 10:00", tz="UTC")
+    df = pd.DataFrame({"visit": ["a"] * 4,
+                       "event": ["start", "region_start", "answer", "region_won"],
+                       "ts": [t, t, t + pd.Timedelta(minutes=40),
+                              t + pd.Timedelta(minutes=41)]})
+    assert usage.split_sittings(df)["visit"].nunique() == 1
 
 
 def test_a_non_ascii_dashboard_password_does_not_crash():
