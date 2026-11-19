@@ -265,6 +265,26 @@ def test_a_teachers_grade_link_survives_a_refresh_then_restart():
     assert {b.key for b in fresh.button} >= keys
 
 
+def test_a_teachers_link_keeps_its_grade_after_a_child_resumes_another_grade():
+    from engine import Game
+    code = Game("Rex", "5", seed=1).to_code()
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.query_params["grade"] = "3"
+    at.run()
+    at.text_input(key="resume_name").set_value("Rex")
+    at.text_input(key="resume_code").set_value(code)
+    click(at, lambda b: "Continue my quest" in b.label)
+    assert "game" in at.session_state and at.session_state.game.grade == "5"
+    # refresh with the address the game wrote, then restart for the next child
+    again = AppTest.from_file(APP, default_timeout=30)
+    for k, v in _params(at).items():
+        again.query_params[k] = v
+    again.run()
+    assert not again.exception and again.session_state.game.grade == "5"
+    restart(again)
+    assert again.query_params["grade"] in ("3", ["3"])
+
+
 def test_a_grade_with_every_topic_switched_off_shows_a_message(monkeypatch):
     import curriculum
     for t in curriculum.grade("4").topics.values():

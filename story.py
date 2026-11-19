@@ -318,9 +318,10 @@ REGIONS = [
 
 REGION_BY_KEY = {r["key"]: r for r in REGIONS}
 
-# The lines above fit any grade's topics. Lines that name a topic (times,
-# shares, fractions, perimeter) live in each grade file's [[region.encounter]]
-# overrides; grade_4.toml holds the original 4th-grade ones.
+# The lines above fit any grade's topics. A grade file can add lines that name
+# its topics (times, shares, fractions, perimeter) with [[region.encounter]]
+# overrides. Only grade_4.toml restores the original topic lines; other grades
+# use these neutral ones except where their file overrides a slot.
 ENCOUNTER_FIELDS = ("name", "emoji", "intro", "win")
 
 

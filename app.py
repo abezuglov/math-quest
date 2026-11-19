@@ -198,17 +198,18 @@ def start_game(make):
 def sync_url(g):
     """Keep the hero code in the page address, so a refresh does not lose the hero."""
     code = g.to_code()
-    link = "1" if st.session_state.get("link_grade") else None
+    teacher = st.session_state.get("link_grade") or None   # may differ from g.grade
     visit = visit_id() if usage.db_url() else None
     if (st.query_params.get("hero") != code or st.query_params.get("name") != g.name
             or st.query_params.get("grade") != g.grade
-            or st.query_params.get("link") != link
+            or st.query_params.get("teacher") != teacher
             or st.query_params.get("v") != visit):
         st.query_params["hero"] = code
         st.query_params["name"] = g.name
         st.query_params["grade"] = g.grade
-        if link:
-            st.query_params["link"] = link
+        st.query_params.pop("link", None)                    # old marker, see main()
+        if teacher:
+            st.query_params["teacher"] = teacher
         if visit:
             st.query_params["v"] = visit
 
@@ -750,11 +751,16 @@ SCREENS = {
 
 def main():
     if "link_grade" not in st.session_state:
-        # First run of this visit. A ?grade= with no hero is a teacher's link;
-        # one next to a hero was written by sync_url, and is the teacher's
-        # only if sync_url marked it with link=1 (so it survives a refresh).
-        teacher = not st.query_params.get("hero") or st.query_params.get("link")
-        st.session_state.link_grade = st.query_params.get("grade") if teacher else None
+        # First run of this visit. A ?grade= with no hero is a teacher's link.
+        # Next to a hero, ?grade= is the hero's grade (written by sync_url), and
+        # the teacher's grade, if any, is in ?teacher= so it survives a refresh
+        # even after a child resumed a hero from another grade. Older addresses
+        # marked the teacher's grade with link=1 instead.
+        qp = st.query_params
+        if not qp.get("hero") or (qp.get("link") and not qp.get("teacher")):
+            st.session_state.link_grade = qp.get("grade")
+        else:
+            st.session_state.link_grade = qp.get("teacher")
     if "game" not in st.session_state and st.query_params.get("hero"):
         # The page was refreshed or bookmarked: bring the hero back from the address.
         name = (st.query_params.get("name") or "Hero").strip()[:20] or "Hero"

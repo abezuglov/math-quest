@@ -691,7 +691,7 @@ def spoken(text: str, choices=None) -> str:
     out = re.sub(r"\b(\d{1,2}):00\b", r"\1 o'clock", str(text))
     out = re.sub(r"\b(\d{1,2}):0(\d)\b", r"\1 oh \2", out)
     out = re.sub(r"\b(\d{1,2}):(\d\d)\b", r"\1 \2", out)
-    out = re.sub(r"(?<![\w)\]])\s*\?", " blank", out)     # a ? that stands for a missing part
+    out = re.sub(r"(?<![\w.)\]])\s*\?", " blank", out)    # a ? that stands for a missing part
     for sign, words in _SPOKEN_SIGNS:
         out = out.replace(sign, words)
     if choices and any(str(c) not in str(text) for c in choices):

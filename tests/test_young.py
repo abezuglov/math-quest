@@ -73,6 +73,8 @@ def test_a_k_file_with_a_fraction_question_is_refused(tmp_path):
     ("6 × 7 = ?", "6 times 7 equals blank"),
     ("45 ? 30   Which sign goes in the middle?",
      "45 blank 30 Which sign goes in the middle?"),
+    ("Is it a.m. or p.m.?", "Is it a.m. or p.m.?"),
+    ("Count on: 5, 6, 7, ?", "Count on: 5, 6, 7, blank"),
 ])
 def test_spoken_text(text, said):
     assert curriculum.spoken(text) == said
