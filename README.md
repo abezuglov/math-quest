@@ -9,6 +9,30 @@ topics. The math lives in plain text files (`curriculum/grade_k.toml` ...
 `curriculum/grade_5.toml`), so a teacher can change it without touching Python
 (see [How to change the content](#how-to-change-the-content)).
 
+## How this was built
+
+The code was written with [Claude Code](https://claude.com/claude-code), an AI
+coding assistant. I set the design, the rules and the checks, and reviewed
+every phase. The approach:
+
+- **Spec first, then phases.** The K-5 expansion was driven by a written spec,
+  [docs/IMPLEMENTATION_PROMPT.md](docs/IMPLEMENTATION_PROMPT.md): content format,
+  six phases, and rules such as "wrong math is the worst bug". Each phase had to
+  pass the full test suite before it was committed.
+- **Automated checks for AI-written content.** `python curriculum.py` generates
+  many samples from each of the 380 question templates (73 topics, 6 grades) and
+  reports wrong or ambiguous answers, choice questions with no right answer or
+  several, negative numbers, and too many decimal places. It runs inside the
+  195 tests in `tests/`.
+- **Guardrails in the design.** Content files are data, not code: a small
+  whitelisted expression evaluator reads them (no `eval`, imports or attribute
+  access). Usage stats are anonymous by design, and a test checks that the hero's
+  name never reaches them.
+- **Independent review.** Commits were also reviewed by a separate AI review
+  pass (roborev) against grade-level guidelines in
+  [.roborev.toml](.roborev.toml): math correctness, reading level, Common Core
+  fit and kid-appropriate text.
+
 ## Run it on your computer
 
 You need Python 3.11 or newer.
