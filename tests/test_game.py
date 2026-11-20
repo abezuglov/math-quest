@@ -414,7 +414,8 @@ def test_an_unread_story_page_and_switched_off_regions_survive_the_code(monkeypa
     play(full, right)
     code = full.to_code()
     import curriculum
-    for tid in ("fractions", "g4_decimals", "division", "g4_convert"):   # forest and docks
+    for tid in ("fractions", "g4_decimals", "division", "g4_convert",
+                "g4_div_place"):                                   # forest and docks
         monkeypatch.setattr(curriculum.grade("4").topics[tid], "enabled", False)
     small = Game.from_code("Rae", code)
     assert len(small.regions) == 4 and small.all_done

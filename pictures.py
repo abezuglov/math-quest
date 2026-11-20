@@ -728,7 +728,38 @@ def angle(deg):
     return _svg(220, 160, body, f"An angle of {deg} degrees")
 
 
+def place_chart(n):
+    """A hundreds | tens | ones place value chart with a disk for every unit
+    (n up to 999, so at most 9 disks per column)."""
+    n = int(n)
+    if not 0 <= n <= 999:
+        raise ValueError("place_chart() needs a number from 0 to 999")
+    digits = [n // 100, n // 10 % 10, n % 10]
+    heads = ["Hundreds", "Tens", "Ones"]
+    labels = ["100", "10", "1"]
+    colors = ["#e2544a", "#3d8fd6", "#3fa45b"]
+    col_w, top, step, r = 120, 44, 34, 14
+    W, H = 3 * col_w + 20, top + 3 * step + 20
+    body = _card(W, H)
+    for c in range(3):
+        x0 = 10 + c * col_w
+        body += (f"<rect x='{x0}' y='10' width='{col_w}' height='{H - 20}' fill='none' "
+                 f"stroke='{INK}' stroke-width='1.5'/>"
+                 f"<line x1='{x0}' y1='{top - 8}' x2='{x0 + col_w}' y2='{top - 8}' "
+                 f"stroke='{INK}' stroke-width='1.5'/>"
+                 + _txt(x0 + col_w / 2, 31, heads[c], size=14))
+        for i in range(digits[c]):
+            cx = x0 + col_w / 2 + (i % 3 - 1) * step
+            cy = top + step / 2 + (i // 3) * step
+            body += (f"<circle cx='{cx:.0f}' cy='{cy:.0f}' r='{r}' fill='{colors[c]}' "
+                     f"stroke='{INK}' stroke-width='1.2'/>"
+                     + _txt(cx, cy + 4, labels[c], size=10 if c == 0 else 11, color="#fff"))
+    return _svg(W, H, body, f"A place value chart showing {digits[0]} hundreds, "
+                            f"{digits[1]} tens and {digits[2]} ones")
+
+
 _PICTURES = {
+    "place_chart": place_chart,
     "array": array_fig, "bars": bars, "pie": pie, "rect": rect_fig, "vmul": vmul_fig,
     "dots": dots, "clock": clock, "coins": coins, "number_line": number_line,
     "shape": shape, "parts": parts, "tally": tally, "bar_graph": bar_graph,

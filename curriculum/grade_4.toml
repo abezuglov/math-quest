@@ -24,7 +24,7 @@ task_topic = "addition"
 key    = "mines"
 name   = "Multiplication Mines"
 gem    = "Gem of Times"
-topics = ["multiplication", "g4_factors"]
+topics = ["multiplication", "g4_factors", "g4_times_table"]
 task   = "multiples"
 task_topic = "multiplication"
   [[region.encounter]]
@@ -41,7 +41,7 @@ task_topic = "multiplication"
 key    = "docks"
 name   = "Division Docks"
 gem    = "Gem of Shares"
-topics = ["division", "g4_convert"]
+topics = ["division", "g4_convert", "g4_div_place"]
 task   = "share"
 task_topic = "division"
   [[region.encounter]]
@@ -621,3 +621,197 @@ tip      = "Parallel lines never meet, like train tracks. Perpendicular lines ma
   answer  = "n"
   hint    = "A regular shape has one line of symmetry for every side."
   explain = "A regular {n}-sided shape has {answer} lines of symmetry."
+
+[[topic]]
+id       = "g4_times_table"
+label    = "Times tables 2 to 10"
+standard = "3.OA.C.7"
+tip      = "Use a fact you know. 7 × 8 is 7 × 7 and one more 7. For the 9s: ten times the number, then take one of the number away. Turn it around: 4 × 9 is the same as 9 × 4."
+
+  [[topic.question]]
+  weight  = 3
+  vars    = { a = "choice([[2, 5, 10], [2, 3, 4, 5, 10], range(2, 11), range(2, 11), [6, 7, 8, 9]][L - 1])", b = "randint(2, 10) if L < 5 else randint(3, 9)", s = "b if b in [2, 5, 9, 10] and a not in [2, 5, 9, 10] else a", o = "a * b // s", flip = "coin()" }
+  text    = "{b if flip else a} × {a if flip else b} = ?"
+  answer  = "a * b"
+  hint    = "{'Double ' + str(o) + '.' if s == 2 else 'Count by 5s: 5, 10, 15...' if s == 5 else 'Ten groups of ' + str(o) + ': put a 0 after it.' if s == 10 else '10 × ' + str(o) + ' = ' + str(10 * o) + '. Now take away one ' + str(o) + '.' if s == 9 else str(s) + ' × ' + str(o - 1) + ' = ' + str(s * (o - 1)) + '. Add one more ' + str(s) + '.'}"
+  explain = "{a} × {b} = {answer}, and {b} × {a} = {answer} too."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  weight  = 2
+  vars    = { a = "choice([[2, 5, 10], [2, 3, 4, 5, 10], range(2, 11), range(2, 11), [6, 7, 8, 9]][L - 1])", b = "randint(2, 10) if L < 5 else randint(3, 9)" }
+  text    = "{a} × ? = {a * b}"
+  answer  = "b"
+  hint    = "Count by {a}s until you reach {a * b}."
+  explain = "{a} × {answer} = {a * b}."
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  weight  = 2
+  vars    = { a = "choice(range(2, 11) if L < 5 else [6, 7, 8, 9])", b = "randint(2, 10) if L < 5 else randint(3, 9)" }
+  text    = "{a * b} ÷ {a} = ?"
+  answer  = "b"
+  hint    = "Division undoes multiplication. Think: {a} × ? = {a * b}."
+  explain = "{a} × {answer} = {a * b}, so {a * b} ÷ {a} = {answer}."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { r = "choice([[2, 5, 10], [2, 3, 4, 5, 10], range(2, 11)][L - 1])", c = "randint(2, 10)" }
+  where   = "r * c <= 60"
+  text    = "How many dots are there? ({r} rows of {c})"
+  answer  = "r * c"
+  hint    = "{r} rows of {c} is {r} × {c}."
+  explain = "{r} × {c} = {answer} dots."
+  picture = ["array", "r", "c"]
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  vars    = { a = "choice([[2, 5, 10], [2, 3, 4, 5, 10], range(2, 11), range(3, 11), [6, 7, 8, 9]][L - 1])", b = "randint(3, 10) if L < 5 else randint(6, 9)", what = "item()" }
+  text    = "There are {a} bags with {b} {what} in each bag. How many {what} are there?"
+  answer  = "a * b"
+  hint    = "{a} groups of {b}: multiply."
+  explain = "{a} × {b} = {answer} {what}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  kind    = "choice"
+  vars    = { a = "randint(3, 9)", b = "randint(3, 9)" }
+  text    = "{a} × {b} = ?"
+  answer  = "a * b"
+  choices = ["a * b", "a * b + a", "a * b - b"]
+  hint    = "Is it {a} groups of {b}? Check with a fact you know."
+  explain = "{a} × {b} = {answer}. {a * b + a} is {a} × {b + 1}, and {a * b - b} is {a - 1} × {b}."
+
+  [[topic.question]]
+  levels  = [5]
+  kind    = "choice"
+  vars    = { a = "randint(3, 10)", b = "randint(3, 10)", c = "randint(3, 10)", e = "randint(3, 10)" }
+  where   = "abs(a * b - c * e) <= 6 and a != c and a != e"
+  text    = "{a} × {b} ? {c} × {e}   Which sign goes in the middle?"
+  answer  = "compare(a * b, c * e)"
+  choices = ["'<'", "'>'", "'='"]
+  shuffle = false
+  hint    = "Work out both products, then compare."
+  explain = "{a} × {b} = {a * b} and {c} × {e} = {c * e}, so {a} × {b} {answer} {c} × {e}."
+
+[[topic]]
+id       = "g4_div_place"
+label    = "Dividing with place value"
+standard = "4.NBT.B.6"
+tip      = "Write the number in expanded form (hundreds + tens + ones). Share the hundreds first. Trade any left-over hundreds for tens, share the tens, then trade and share the ones. What is left at the end is the remainder."
+
+  # --- Expanded notation, every place shares evenly (no trading) -----------
+  [[topic.question]]
+  levels  = [1, 2]
+  vars    = { d = "randint(2, 3) if L == 1 else randint(2, 4)", qa = "randint(1, 9 // d)", qb = "randint(1, 9 // d)", qc = "randint(1, 9 // d)", q = "100 * qa + 10 * qb + qc", n = "d * q" }
+  text    = "{n} ÷ {d} = ?   Break it up: {n} = {expanded(n)}. Divide each part by {d}, then add."
+  answer  = "q"
+  hint    = "{100 * d * qa} ÷ {d} = {100 * qa}. Now do the tens and the ones the same way."
+  explain = "({expanded(n)}) ÷ {d} = {100 * qa} + {10 * qb} + {qc} = {answer}."
+
+  [[topic.question]]
+  levels  = [1, 2, 3]
+  vars    = { d = "randint(2, 3) if L == 1 else randint(2, 4)", qa = "randint(1, 9 // d)", qb = "randint(1, 9 // d)", qc = "randint(1, 9 // d)", n = "d * (100 * qa + 10 * qb + qc)", pl = "choice([100, 10, 1])", p = "digit(n, pl) * pl", unit = "'hundreds' if pl == 100 else 'tens' if pl == 10 else 'ones'", who = "name()" }
+  text    = "To divide {n} by {d}, {who} writes {n} = {expanded(n)}. What is {p} ÷ {d}?"
+  answer  = "p // d"
+  hint    = "{p} is {p // pl} {unit[:-1] if p // pl == 1 else unit}. Share {'it' if p // pl == 1 else 'them'} among {d} groups."
+  explain = "{p // pl} {unit} ÷ {d} = {p // pl // d} {unit[:-1] if p // pl // d == 1 else unit}, so {p} ÷ {d} = {answer}."
+
+  # --- Expanded notation with trading: parts that the divisor shares -------
+  [[topic.question]]
+  levels  = [2, 3, 4]
+  vars    = { d = "randint(2, 5) if L == 2 else randint(3, 9)", q = "randint(100 // d + 1, 999 // d)", n = "d * q", A = "100 * d * (q // 100)", B = "10 * d * (q // 10 % 10)", C = "d * (q % 10)", shown = "(str(A) + ' + ' if A else '') + str(B)", quots = "(str(A // d) + ' + ' if A else '') + str(B // d)", who = "name()" }
+  where   = "q % 10 != 0 and q // 10 % 10 != 0 and (B >= 100 or C >= 10)"
+  text    = "{who} divides {n} by {d} with expanded notation, breaking {n} into parts that {d} divides evenly: {n} = {shown} + ?. What is the missing part?"
+  answer  = "C"
+  hint    = "Add the parts you already have, then take that away from {n}."
+  explain = "{n} − {A + B} = {answer}. Each part ÷ {d}: {quots} + {C // d} = {q}, so {n} ÷ {d} = {q}."
+
+  [[topic.question]]
+  levels  = [2, 3, 4, 5]
+  weight  = 2
+  vars    = { d = "randint(2, 5) if L == 2 else randint(3, 9)", q = "randint(100 // d + 1, 999 // d)", n = "d * q", A = "100 * d * (q // 100)", B = "10 * d * (q // 10 % 10)", C = "d * (q % 10)", shown = "(str(A) + ' + ' if A else '') + str(B) + ' + ' + str(C)", quots = "(str(A // d) + ' + ' if A else '') + str(B // d) + ' + ' + str(C // d)" }
+  where   = "q % 10 != 0 and q // 10 % 10 != 0 and (B >= 100 or C >= 10)"
+  text    = "{n} = {shown}, and {d} divides each part evenly. Use the parts to find {n} ÷ {d}."
+  answer  = "q"
+  hint    = "Divide each part by {d}, then add the answers."
+  explain = "({shown}) ÷ {d} = {quots} = {answer}."
+
+  # --- Place value chart: share hundreds, trade, share tens -----------------
+  [[topic.question]]
+  levels  = [3, 4]
+  vars    = { d = "randint(2, 4)", n = "randint(100 * d, 999)", h = "n // 100", e = "h // d" }
+  where   = "h % d != 0"
+  text    = "Share {n} equally among {d} groups using the place value chart. First share the hundreds: each group gets {e} {'hundred' if e == 1 else 'hundreds'}. How many hundreds are left over?"
+  answer  = "h % d"
+  hint    = "{d} groups × {e} = {d * e} hundreds used. The chart had {h} hundreds."
+  explain = "{h} − {d * e} = {answer} left over. Trade {'it' if h % d == 1 else 'them'} for {10 * (h % d)} tens."
+  picture = ["place_chart", "n"]
+
+  [[topic.question]]
+  levels  = [3, 4]
+  vars    = { d = "randint(2, 5)", n = "randint(100 * d, 999)", h = "n // 100", t = "n // 10 % 10", k = "h % d" }
+  where   = "k != 0"
+  text    = "{n} ÷ {d}: after the hundreds are shared, {k} {'hundred is' if k == 1 else 'hundreds are'} left over. Trade {'it' if k == 1 else 'them'} for tens. How many tens are there now to share?"
+  answer  = "10 * k + t"
+  hint    = "1 hundred = 10 tens. Don't forget the {t} tens already in the chart."
+  explain = "{k} {'hundred' if k == 1 else 'hundreds'} = {10 * k} tens, plus the {t} tens in the chart: {10 * k} + {t} = {answer} tens."
+  picture = ["place_chart", "n"]
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { d = "randint(3, 9)", n = "randint(100, 999)", h = "n // 100", T = "10 * (h % d) + n // 10 % 10" }
+  where   = "h % d != 0 and T >= d"
+  text    = "{n} ÷ {d} with the place value chart. After trading the left-over hundreds, there are {T} tens to share among {d} groups. How many tens does each group get?"
+  answer  = "T // d"
+  hint    = "{d} × ? is as close to {T} as it can get without going over."
+  explain = "{d} × {answer} = {d * (T // d)}, so each group gets {answer} tens. {T % d} {'ten is' if T % d == 1 else 'tens are'} left to trade for ones."
+  picture = ["place_chart", "n"]
+
+  [[topic.question]]
+  levels  = [3, 4, 5]
+  kind    = "choice"
+  vars    = { d = "randint(2, 9)", big = "coin()", n = "randint(100 * d, 999) if big else randint(100, 100 * d - 1)", h = "n // 100", t = "n // 10 % 10" }
+  text    = "{n} ÷ {d}: in which place is the first digit of the quotient?"
+  answer  = "'hundreds' if h >= d else 'tens'"
+  choices = ["'hundreds'", "'tens'"]
+  shuffle = false
+  hint    = "Can {h} {'hundred' if h == 1 else 'hundreds'} be shared among {d} groups so each group gets at least one?"
+  explain = "{'There are ' + str(h) + ' hundreds: enough for each of the ' + str(d) + ' groups to get one. The quotient starts in the hundreds place.' if h >= d else ('There is only 1 hundred' if h == 1 else 'There are only ' + str(h) + ' hundreds') + ', not enough for ' + str(d) + ' groups. Trade for ' + str(10 * h + t) + ' tens: the quotient starts in the tens place.'}"
+  picture = ["place_chart", "n"]
+
+  # --- Remainders, zeros in the quotient, what the remainder means ----------
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { d = "randint(3, 9)", q = "randint(12, 990 // d)", r = "randint(1, d - 1)", n = "d * q + r" }
+  where   = "n <= 999"
+  text    = "{n} ÷ {d} = ? R {r}"
+  answer  = "q"
+  hint    = "Share the hundreds, then the tens, then the ones. The {r} left at the end is the remainder."
+  explain = "{d} × {answer} = {d * q}, and {n} − {d * q} = {r}. So {n} ÷ {d} = {answer} R {r}."
+
+  [[topic.question]]
+  levels  = [4, 5]
+  vars    = { d = "randint(3, 9)", q = "randint(12, 990 // d)", r = "randint(1, d - 1)", n = "d * q + r" }
+  where   = "n <= 999"
+  text    = "{n} ÷ {d} = {q} R ?"
+  answer  = "r"
+  hint    = "Multiply {d} × {q}, then take that away from {n}."
+  explain = "{d} × {q} = {d * q}, and {n} − {d * q} = {answer}. So {n} ÷ {d} = {q} R {answer}."
+
+  [[topic.question]]
+  levels  = [5]
+  vars    = { d = "randint(2, 9)", qa = "randint(1, 999 // d // 100)", qc = "randint(1, min(9, 999 // d - 100 * qa))", q = "100 * qa + qc", n = "d * q" }
+  text    = "What is {n} ÷ {d}? Watch the tens place!"
+  answer  = "q"
+  hint    = "After sharing the hundreds, are there enough tens for each of the {d} groups to get one? If not, the quotient gets a 0 in the tens place."
+  explain = "{n} = {100 * d * qa} + {d * qc}. {100 * d * qa} ÷ {d} = {100 * qa} and {d * qc} ÷ {d} = {qc}. {100 * qa} + {qc} = {answer}. There are 0 tens in the quotient."
+
+  [[topic.question]]
+  levels  = [5]
+  vars    = { d = "randint(6, 9)", n = "randint(50, 300)" }
+  where   = "n % d != 0"
+  text    = "{n} students go on a trip. Each van holds {d} students. How many vans are needed?"
+  answer  = "n // d + 1"
+  hint    = "{n} ÷ {d} has a remainder. The students left over need a van too!"
+  explain = "{n} ÷ {d} = {n // d} R {n % d}. The {n % d} left-over {'student needs' if n % d == 1 else 'students need'} one more van: {answer} vans."

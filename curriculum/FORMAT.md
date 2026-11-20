@@ -250,6 +250,7 @@ drawing, the rest are expressions for its numbers.
 | `bar_graph` | list of labels, list of counts | a bar graph |
 | `cubes` | length, width, height | a box of unit cubes |
 | `grid_point` | x, y | a point on a grid (first quadrant) |
+| `place_chart` | n (up to 999) | a hundreds / tens / ones chart with place value disks |
 
 ## Functions you may use in expressions
 
